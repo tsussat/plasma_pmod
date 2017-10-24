@@ -20,7 +20,7 @@ Pour lancer le hello world:
 
 5. Lancer la simulation logique sous vivado : `make simu`
 
-    Vous devez voir Hello world ! s'afficher dans le terminal
+    Vous devez voir "Hello world !" s'afficher dans le terminal
 
 6. Changer la valeur de la variable `MY_PROJECT` dans le `makefile` : `MY_PROJECT=boot_loader`
 

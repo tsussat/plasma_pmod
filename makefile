@@ -41,9 +41,9 @@ SIM_TOP = tbench
 SYN_TOP = top_plasma
 OBJ_DIR = OBJ
 
-all: vhdl soft simu
+all: soft vhdl simu
 
-debug: vhdl soft simu_debug
+debug: soft vhdl simu_debug
 
 fpga:
 	# software compilation
