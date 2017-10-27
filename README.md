@@ -5,6 +5,56 @@ Ce dépôt git est dédié à la modification (matérielle et logicielle) du pro
 Ce fichier permet de documenter le projet
 
 
+# Compte Rendu de la séance du 27/10
+
+1.  Lors de cette séance, Yannick nous a présenté les PMODs disponibles dont la liste est la suivante (non exhaustive):
+    - PMOD GPS
+    - PMOD Joystick
+    - PMOD Compas
+    - PMOD OLED RGB
+    - PMOD OLED
+    - PMOD TMP3
+    - PMOD USB/UART
+    - PMOD RF2
+    - PMOD Micro
+    - PMOD Sonar
+    - PMOD ALS
+    - PMOD RTCC
+    - PMOD I2S
+    - PMOD Gyroscope
+    - PMOD Horloge Temps Réel
+    - PMOD DA3
+    - PMOD Clavier
+    
+    Il nous a ensuite présenté le principe de fonctionnement de l'architecture sur le FPGA et les différentes parties: Interface    Bus/FSM/Interface API. L'objectif est de développer une interface de communication entre le PMOD et la FSM qui soit la plus générique possible. Elle doit être flexible en permettant la prise en charge de plusieurs PMODs et couvrir divers besoins. Pour un PMOD donné, il faut réfléchir à quelles fonctions sont accessibles et avec quelles addresses.
+Les trois bus de communication disponibles sont SPI, UART et I2C.
+
+Idée de projet: Plutôt que de développer une application précise, nous envisageons de nous concentrer sur le développement matériel des drivers pour les périphériques. L'idée serait de faire une application vitrine en commençant par utiliser les PMODs OLED RGB, Clavier et un capteur au choix. Ainsi l'utilisateur pourra communiquer directement avec la carte. Lorsque que le capteur est connecté, l'appui sur une touche génère de l'information sur l'écran Oled.
+
+
+2. Compromis Software/Hardware
+    - Développement du PMOD Oled sur couche logicielle et du PMOD Clavier sur couche matérielle ?
+    - Stockage de la police du texte sur une ROM externe ou dans un grand tableau pour faire du bitmap direct ?
+    - Notion de flexibilité VGA/Oled (partie software complète, juste le bus change) ?
+    - Yannick n'a pas de priorité sur l'ordre des PMODs utilisés, voir avec Camille si il en a.
+
+
+3. Organisation et répartition du travail futur
+    - Une division par PMODS (OledRGB/Clavier/Capteur)?
+    - Une dision plus au niveau technique (VHDL/PLASMA)?
+
+
+4. Communication
+    - Pour les comptes rendus des séances, vous préférez les mails ou des fichiers sur le GitHub ?
+
+
+5. Objectifs pour la prochaine séance du 10/11
+    - Répondre aux problématiques précédentes
+    - Regarder comment connecter les leds/switchs/boutons de la carte Nexys sur le bus système
+
+
+
+
 # Executer un hello world sur le Plasma implémenté sur la Nexys 4
 
 
