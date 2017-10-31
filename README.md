@@ -1,10 +1,10 @@
-# plasma_pmod
+# Wiki du projet Plasma PMOD
 
-Ce dépôt git est dédié à la modification (matérielle et logicielle) du processeur softcore Plasma (disponible sur OpenCores.org) afin de pouvoir gérer des modules PMOD sur les cartes de développement Nexys-4 de Digilent.
+Ce dépôt git est dédié à la modification (matérielle et logicielle) du processeur softcore [Plasma](https://opencores.org/project,plasma "Plasma's Homepage") afin de pouvoir gérer des modules PMOD sur les cartes de développement Nexys-4 de Digilent.
 
 Ce fichier permet de documenter le projet
 
-# Executer un hello world sur le Plasma implémenté sur la Nexys 4
+# Executer un "Hello world !" sur le Plasma implémenté sur la Nexys 4
 
 
 Pour lancer le hello world:
