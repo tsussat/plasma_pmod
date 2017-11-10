@@ -1,0 +1,16 @@
+.Xil
+.idea
+cmake-build-debug
+*.pb
+output.txt
+*.wdb
+xsim.dir
+*.log
+*.jou
+*.o
+*.cf
+*.os
+code_bin.txt
+code.txt
+pcie_in.txt
+pcie_out.txt
