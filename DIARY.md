@@ -68,6 +68,7 @@ Idée de projet: Plutôt que de développer une application précise, nous envis
 5. Objectifs pour la prochaine séance du 10/11
     - Répondre aux problématiques précédentes
     - Regarder comment connecter les leds/switchs/boutons de la carte Nexys sur le bus système
+    - Connecter et gérer OLED RGB, char map
 
 6. (YB) : organisation de la doc et des fichiers.
     - pour moi, mélanger les comptes rendus et les descriptions techniques dans le même fichier n'a pas de sens. Définir une hiérarchie pour la documentation.
@@ -80,6 +81,19 @@ Idée de projet: Plutôt que de développer une application précise, nous envis
 2. Mise en place des outils (Vivado, Modelsim, gcc, ...)
 
 NB: Il faudrait mettre à jour le makefile pour qu'on puisse choisir les outils que l'on veut utiliser, notamment pour la simulation (Modelsim, Vivado, GHDL, ...)
+
+
+# Compte Rendu de la séance du 10/11
+
+1. Discussion avec Mr Bornat sur l'utilisation des PMODs. L'idée est de commencer par afficher des caractères ASCII sur un PMOD OLED RGB en utilisant tout ou partie des choses déjà développées puis d'enrichir l'affichage grâce à la flexibilité du Plasma.
+2. Installation des outils sur les PC portables de Paul et Henry. C'est en cours. 
+3. Essai de l'éxecution du Hello world sur les machines de l'école: SANS SUCCES
+4. Pour la prochaine séance, vous devez tous arriver avec un hello world qui fonctionne afin que l'on puisse avancer sur le fond du projet.
+
+##Envoi du programme via l'UART:
+Pour info, j'ai (CL) passé un peu de temps vendredi après-midi pour voir d'ou pouvait venir le problème sur les machines de l'école. Il semble que ce soit le programme C++ d'envoi des données via l'UART qui ait un problème (./C/tools/prog_format_for_boot_loader/main.cpp). Pour rappel, cela fonctionne très bien sur ma machine, il se pourrait donc que vous n'ayez pas de problème sur vos machines respectives.
+A la place du programme C++, j'ai utilisé un script Matlab pour envoyer le programme sur le FPGA, je n'ai pas réussi à faire booter le Plasma mais il semble néanmoins que les données soient arrivées sur le Plasma... Je continue de regarder de mon côté.
+
 
 
 
