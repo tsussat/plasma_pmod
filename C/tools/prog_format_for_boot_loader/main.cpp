@@ -23,19 +23,49 @@
 #define BUF_SIZE 1000000
 #define EXIT_SUCCESS 0
 
-
-void send_char(unsigned char c, int fileDescriptor)
+int error = 1;
+void send_char(unsigned char c, int fileDescriptor, bool wait = false)
 {
-
+//	printf(">> Send [%d - 0x%2.2X]\n", (int)c, (int)c);
 	int rBytes, wBytes;
 	wBytes = write(fileDescriptor, &c, 1);
-	assert( wBytes == 1 );
+	//printf("s= %d \n", (int)c);
+	//usleep(1000000);
+	//assert( wBytes == 1 );
+
+	/*if( wait == false )
+		return;*/
+
 	unsigned char buf = 14;
-	rBytes = read (fileDescriptor, &buf, 1);
-	assert( rBytes == 1 );
+	//rBytes = read (fileDescriptor, &buf, 1);
+	//printf("r= %d \n", (int)buf);
+	//assert( rBytes == 1 );
+	//assert(c == buf);
+
+
+/*#if 1
+	if( c != buf ){
+		printf("  s= 0x%2.2X (%d), r= 0x%2.2X (%c) \n", (int)c, (int)c, (int)buf, (int)buf);
+		error -= 1;
+		if( error == 0 )
+			assert(c == buf);
+	}
+#else
 	assert(c == buf);
-	//printf("s= %d, r= %d \n", (int)c, (int)buf);
-	usleep(1);
+#endif*/
+	usleep(100);
+	
+	
+	/*while(rBytes != 1 || c != buf)
+	{
+		wBytes = write(fileDescriptor, &c, 1);
+		printf("s= %d \n", (int)c);
+		unsigned char buf = 14;
+		rBytes = read (fileDescriptor, &buf, 1);
+		printf("r= %d \n", (int)buf);
+		usleep(100);
+	}*/
+	
 	
 }
 
@@ -78,11 +108,14 @@ int main(int argc, char ** argv) {
 		prog[ k ] = __bswap_32 ( prog[ k ] );
 	}*/
 
-	unsigned char clef[4] = {0xEF, 0xCD, 0xAB, 0xFF};
+	unsigned char clef[4] = {0x33, 0x32, 0x31, 0x30};
     int wBytes;
     send_char(clef[3], fileDescriptor);
+	usleep( 10000 );
     send_char(clef[2], fileDescriptor);
+	usleep( 10000 );
     send_char(clef[1], fileDescriptor);
+	usleep( 10000 );
     send_char(clef[0], fileDescriptor);
     //wBytes = write(fileDescriptor, &p_char[0], 1); assert( wBytes == 1 ); usleep( 10000 );
     //wBytes = write(fileDescriptor, &p_char[1], 1); assert( wBytes == 1 ); usleep( 10000 );
@@ -111,7 +144,7 @@ int main(int argc, char ** argv) {
 	for(int k=0; k< size; k++){
 	    //wBytes = write(fileDescriptor, &buf[k], 1);
 	    //assert( wBytes == 1 );
-	    //usleep( 10000 );
+	    usleep( 10000 );
 	    send_char(buf[k], fileDescriptor);
 	    //printf("buf[%d]=%d\n\n",k,(int)buf[k]);
 	}

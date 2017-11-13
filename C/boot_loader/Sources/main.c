@@ -45,7 +45,7 @@ unsigned char wait_data()
 {
 	while( !(MemoryRead(IRQ_STATUS) & IRQ_UART_READ_AVAILABLE) );
 	unsigned char cc = MemoryRead(UART_READ);
-	putchar(cc);
+	//putchar(cc);
 	return cc;
 }
 
@@ -162,14 +162,14 @@ int ReceiveProgram()
 	unsigned char data;
 	data = wait_data(); // ON LIT LA DONNEE 0xFF
 	//my_printf("ch=",(int)(data));
-	if( data != 0xAB )
+	if( data != 0x31 )
 	{
         print_err( 3 );
         return 0;
 	}
 	data = wait_data(); // ON LIT LA DONNEE 0xFF
 	//my_printf("ch=",(int)(data));
-	if( data != 0xCD ) 
+	if( data != 0x32 ) 
 	{
         print_err( 4 );
         return 0;
@@ -177,7 +177,7 @@ int ReceiveProgram()
     
 	data = wait_data(); // ON LIT LA DONNEE 0xFF
 	//my_printf("ch=",(int)(data));
-	if( data != 0xEF ) 
+	if( data != 0x33 ) 
 	{
         print_err( 5 );
         return 0;
@@ -195,7 +195,7 @@ int ReceiveProgram()
 	unsigned char data4 = wait_data(); // ON LIT LA DONNEE 0xFF
 	//my_printf("d4=",(int)(data4));
 	unsigned int sSize = (data4 << 24) | (data3 << 16) | (data2 << 8) | data1;
-
+//	my_printf("size=%d\n",sSize);
     //
     // ON RECUPERE LES N DONNEES PREVUES
     //
@@ -203,6 +203,7 @@ int ReceiveProgram()
 		unsigned char dataS = wait_data();
 		//my_printf("dataS=",(int)(dataS));
 		ptr[y] = dataS;
+//		my_printf("y=",y);
     }
     ptr = (unsigned char*)DDR_BASE;
     /*my_printf("val0 ",ptr[0]);
@@ -264,8 +265,8 @@ int main()
                 ProgramExec();
                 break;
                 
-            case 0xFF:
-				puts("R"); //(I) Starting UART reception\n");
+            case 0x30:
+		//puts("R"); //(I) Starting UART reception\n");
                 ReceiveProgram();
                 ProgramExec();
                 break;

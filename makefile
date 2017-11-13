@@ -109,7 +109,7 @@ send:
 
 	$(CONVERT_BIN)
 
-	sudo $(C_DIR)/tools/prog_format_for_boot_loader/a.out test.bin
+	$(C_DIR)/tools/prog_format_for_boot_loader/a.out test.bin
 
 dasm:
 	mips-elf-gcc -O3 -Wall -c -s -funroll-loops -mips1 -mtune=mips1 -msoft-float -std=c99 -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/main.c -S
