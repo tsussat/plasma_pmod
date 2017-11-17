@@ -23,6 +23,8 @@
 --   0x20000050  GPIOA In
 --   0x20000060  Counter
 --   0x20000070  Ethernet transmit count
+--   0x20000100  Buttons controller values
+--   0x20000110  Buttons controller change
 --   IRQ bits:
 --      7   GPIO31
 --      6  ^GPIO31
@@ -103,6 +105,11 @@ entity plasma is
 				VGA_green    : out std_logic_vector(3 downto 0);   -- green output
 				VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
 
+				btnU : in std_logic;
+				btnD : in std_logic;
+				btnL : in std_logic;
+				btnR : in std_logic;
+
 				gpio0_out    : out std_logic_vector(31 downto 0);
 				gpioA_in     : in  std_logic_vector(31 downto 0));
 end; --entity plasma
@@ -130,7 +137,11 @@ architecture logic of plasma is
    signal enable_uart_write : std_logic;
    signal enable_eth        : std_logic;
    signal enable_local_mem  : std_logic;
-	
+   signal enable_buttons    : std_logic;	
+
+   signal buttons_values    : std_logic_vector(31 downto 0);
+   signal buttons_change    : std_logic_vector(31 downto 0);
+
    signal gpio0_reg         : std_logic_vector(31 downto 0);
    signal uart_write_busy   : std_logic;
    signal uart_data_avail   : std_logic;
@@ -201,10 +212,12 @@ begin  --architecture
    gpio0_out(23 downto 0)  <= gpio0_reg(23 downto 0);
 
    enable_misc             <= '1' when cpu_address(30 downto 28) = "010" else '0';
-   enable_uart             <= '1' when enable_misc = '1' and cpu_address(7 downto 4) = "0000" else '0';
+   enable_uart             <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00000" else '0';
    enable_uart_read        <= enable_uart and not write_enable;
    enable_uart_write       <= enable_uart and write_enable;
-   enable_eth              <= '1' when enable_misc = '1' and cpu_address(7 downto 4) = "0111" else '0';
+   enable_eth              <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
+   enable_buttons <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
+
    cpu_address(1 downto 0) <= "00";
 
 	--
@@ -336,26 +349,30 @@ begin  --architecture
 				cpu_data_r <= ram_data_lm;
       
 			-- ON LIT LES DONNEES DES PERIPHERIQUES MISC.
-			when "010" =>         --misc
-         	case cpu_address(6 downto 4) is
-         		when "000" =>      --uart
+	when "010" =>         --misc
+         	case cpu_address(8 downto 4) is
+         		when "00000" =>      --uart
          		   cpu_data_r <= ZERO(31 downto 8) & data_read_uart;
-        		 	when "001" =>      --irq_mask
+        		when "00001" =>      --irq_mask
             		cpu_data_r <= ZERO(31 downto 8) & irq_mask_reg;
-         		when "010" =>      --irq_status
+         		when "00010" =>      --irq_status
          		   cpu_data_r <= ZERO(31 downto 8) & irq_status;
-         		when "011" =>      --gpio0
+         		when "00011" =>      --gpio0
             		cpu_data_r <= gpio0_reg;
-         		when "101" =>      --gpioA
+         		when "00101" =>      --gpioA
             		cpu_data_r <= gpioA_in;
-         		when "110" =>      --counter
+         		when "00110" =>      --counter
             		cpu_data_r <= counter_reg;
-					when others =>		 -- ce n'est pas pr\E9vu...
-						cpu_data_r <= x"FFFFFFFF";
-				end case;
+         		when "10000" =>      --buttons
+            		cpu_data_r <= buttons_values;
+         		when "10001" =>      --buttoms
+            		cpu_data_r <= buttons_change;
+			when others =>		 -- ce n'est pas pr\E9vu...
+			cpu_data_r <= x"FFFFFFFF";
+		end case;
 
 			-- ON LIT LES DONNEES EN PROVENANCE DU PCIe 0x3....XX
-			when "011" =>
+	when "011" =>
          	case cpu_address(7 downto 4) is
 					when "0000"  => cpu_data_r <= ZERO(31 downto 1) & fifo_1_empty;
 					when "0001"  => cpu_data_r <= ZERO(31 downto 1) & fifo_2_empty;
@@ -373,7 +390,7 @@ begin  --architecture
 			--
 			-- LECTURE DES RESULTATS DES COPROCESSEURS
 			--
-			when "100" =>
+	when "100" =>
          	case cpu_address(7 downto 0) is
 					when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
 					when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
@@ -496,6 +513,22 @@ begin  --architecture
          uart_data_avail <= '0';
    end generate;
 
+	--
+	-- Buttons controller
+	--
+
+  plasma_buttons_controller: buttons_controller
+      port map(
+         clock          => clk,
+         reset        => reset,
+         buttons_access => enable_buttons,
+	 btnU => btnU,
+         btnD => btnD,
+         btnL => btnL,
+         btnR => btnR,
+         buttons_values => buttons_values,
+         buttons_change => buttons_change
+      );
 
 	--
 	-- ETHERNET CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)
