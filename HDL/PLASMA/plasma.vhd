@@ -102,6 +102,26 @@ entity plasma is
 				VGA_red      : out std_logic_vector(3 downto 0);   -- red output
 				VGA_green    : out std_logic_vector(3 downto 0);   -- green output
 				VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
+				
+				sw           : in  std_logic_vector(15 downto 0);
+                led          : out std_logic_vector(15 downto 0);
+                   
+                RGB1_Red     : out std_logic;
+                RGB1_Green   : out std_logic;
+                RGB1_Blue    : out std_logic;
+                RGB2_Red     : out std_logic;
+                RGB2_Green   : out std_logic;
+                RGB2_Blue    : out std_logic;
+                   
+                seg          : out std_logic_vector(6 downto 0);
+                an           : out std_logic_vector(7 downto 0);
+                   
+                btnCpuReset  : in std_logic;
+                btnC         : in std_logic;
+                btnU         : in std_logic;
+                btnL         : in std_logic;
+                btnR         : in std_logic;
+                btnD         : in std_logic;
 
 				gpio0_out    : out std_logic_vector(31 downto 0);
 				gpioA_in     : in  std_logic_vector(31 downto 0));
@@ -184,6 +204,21 @@ architecture logic of plasma is
 	end COMPONENT;
 
 begin  --architecture
+
+
+   RGB1_Red <= btnCpuReset;
+   RGB1_Green <= btnD;
+   RGB1_Blue <= btnU;
+   RGB2_Red <= btnR;
+   RGB2_Green <= btnL;
+   RGB2_Blue <= btnC;
+   
+   led <= sw;
+   
+   seg <= "1011010";
+   an <= sw(7 downto 0);
+   
+      
    write_enable <= '1' when cpu_byte_we /= "0000" else '0';
    mem_busy     <= eth_pause;-- or mem_pause_in;
    cache_hit    <= cache_checking and not cache_miss;

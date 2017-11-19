@@ -16,8 +16,8 @@
 #MY_PROJECT=filtre_no_fifo
 #MY_PROJECT=tuto_plasma
 #MY_PROJECT=mandelbrot
-#MY_PROJECT=boot_loader
-MY_PROJECT=hello
+MY_PROJECT=boot_loader
+#MY_PROJECT=hello
 
 SRC_DIR=Sources
 INC_DIR=Includes
