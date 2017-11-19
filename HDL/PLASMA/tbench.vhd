@@ -63,59 +63,73 @@ ARCHITECTURE logic OF tbench IS
     
     SIGNAL clk_VGA : STD_LOGIC:='0';
     
-    signal btnU, btnD,  btnL, btnR : std_logic;
+    signal led          : std_logic_vector(15 downto 0);
+    signal sw           : std_logic_vector(15 downto 0);
     
-component plasma is
-   generic(memory_type : string := "XILINX_16X"; --"DUAL_PORT_" "ALTERA_LPM";
-           log_file    : string := "UNUSED";
-           ethernet    : std_logic  := '0';
-           eUart       : std_logic  := '0';
-           use_cache   : std_logic  := '0');
-   port(clk          : in std_logic;
-   				clk_VGA : in std_logic;
-				reset        : in std_logic;
+    signal RGB1_Red     : std_logic;
+    signal RGB1_Green   : std_logic;
+    signal RGB1_Blue    : std_logic;
+    signal RGB2_Red     : std_logic;
+    signal RGB2_Green   : std_logic;
+    signal RGB2_Blue    : std_logic;
+    
+    signal btnCpuReset : std_logic;
+    signal btnC  : std_logic;
+    signal btnU  : std_logic;
+    signal btnL  : std_logic;
+    signal btnR  : std_logic;
+    signal btnD  : std_logic;
+    
+    signal seg          : std_logic_vector(6 downto 0);
+    signal an           : std_logic_vector(7 downto 0);
+    
+--component plasma is
+--   generic(memory_type : string := "XILINX_16X"; --"DUAL_PORT_" "ALTERA_LPM";
+--           log_file    : string := "UNUSED";
+--           ethernet    : std_logic  := '0';
+--           eUart       : std_logic  := '0';
+--           use_cache   : std_logic  := '0');
+--   port(clk          : in std_logic;
+--   				clk_VGA : in std_logic;
+--				reset        : in std_logic;
 
-				uart_write   : out std_logic;
-				uart_read    : in std_logic;
+--				uart_write   : out std_logic;
+--				uart_read    : in std_logic;
 
-				address      : out std_logic_vector(31 downto 2);
-				byte_we      : out std_logic_vector(3  downto 0); 
-				--data_write   : out std_logic_vector(31 downto 0);
-				--data_read    : in  std_logic_vector(31 downto 0);
-				---mem_pause_in : in std_logic;
-				no_ddr_start : out std_logic;
-				no_ddr_stop  : out std_logic;
+--				address      : out std_logic_vector(31 downto 2);
+--				byte_we      : out std_logic_vector(3  downto 0); 
+--				--data_write   : out std_logic_vector(31 downto 0);
+--				--data_read    : in  std_logic_vector(31 downto 0);
+--				---mem_pause_in : in std_logic;
+--				no_ddr_start : out std_logic;
+--				no_ddr_stop  : out std_logic;
         
-				-- BLG START
-				fifo_1_out_data  : IN  STD_LOGIC_VECTOR (31 DOWNTO 0);
-				fifo_1_read_en   : OUT STD_LOGIC;
-				fifo_1_empty     : IN  STD_LOGIC;
-				fifo_2_in_data   : OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
-				fifo_1_write_en  : OUT STD_LOGIC;
-				fifo_2_full      : IN  STD_LOGIC;
+--				-- BLG START
+--				fifo_1_out_data  : IN  STD_LOGIC_VECTOR (31 DOWNTO 0);
+--				fifo_1_read_en   : OUT STD_LOGIC;
+--				fifo_1_empty     : IN  STD_LOGIC;
+--				fifo_2_in_data   : OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
+--				fifo_1_write_en  : OUT STD_LOGIC;
+--				fifo_2_full      : IN  STD_LOGIC;
 	 
-				fifo_1_full      : IN STD_LOGIC;
-				fifo_1_valid     : IN STD_LOGIC;
-				fifo_2_empty     : IN STD_LOGIC;
-				fifo_2_valid     : IN STD_LOGIC;
-				fifo_1_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
-				fifo_2_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
+--				fifo_1_full      : IN STD_LOGIC;
+--				fifo_1_valid     : IN STD_LOGIC;
+--				fifo_2_empty     : IN STD_LOGIC;
+--				fifo_2_valid     : IN STD_LOGIC;
+--				fifo_1_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
+--				fifo_2_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
 				
-                                VGA_hs       : out std_logic;   -- horisontal vga syncr.
-                                VGA_vs       : out std_logic;   -- vertical vga syncr.
-                                VGA_red      : out std_logic_vector(3 downto 0);   -- red output
-                                VGA_green    : out std_logic_vector(3 downto 0);   -- green output
-                                VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
+--                                VGA_hs       : out std_logic;   -- horisontal vga syncr.
+--                                VGA_vs       : out std_logic;   -- vertical vga syncr.
+--                                VGA_red      : out std_logic_vector(3 downto 0);   -- red output
+--                                VGA_green    : out std_logic_vector(3 downto 0);   -- green output
+--                                VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
 
-				-- BLG END
-            btnU : in std_logic;
-            btnD : in std_logic;
-            btnL : in std_logic;
-            btnR : in std_logic;
-            
-				gpio0_out    : out std_logic_vector(31 downto 0);
-				gpioA_in     : in  std_logic_vector(31 downto 0));
-end component; --entity plasma
+--				-- BLG END
+
+--				gpio0_out    : out std_logic_vector(31 downto 0);
+--				gpioA_in     : in  std_logic_vector(31 downto 0));
+--end component; --entity plasma
 
 
 BEGIN  --architecture
@@ -132,7 +146,7 @@ BEGIN  --architecture
 
     gpioA_in(7 DOWNTO 0) <= "00000010";
 
-    u1_plasma : plasma
+    u1_plasma : entity work.plasma
 	GENERIC MAP (
 	    memory_type => memory_type,
 	    ethernet	=> '1',
@@ -171,10 +185,26 @@ BEGIN  --architecture
 		VGA_green => open,
 		VGA_blue => open,
 	    
-	    btnU => btnU,
-            btnD => btnD,
-            btnL => btnL,
-            btnR => btnR,
+	    sw        => sw,
+        led       => led,
+        
+        RGB1_Red => RGB1_Red,
+        RGB1_Green => RGB1_Green,
+        RGB1_Blue => RGB1_Blue,
+        RGB2_Red => RGB2_Red,
+        RGB2_Green => RGB2_Green,
+        RGB2_Blue => RGB2_Blue,
+        
+        seg         => seg,
+        an          => an,
+        
+        btnCpuReset => btnCpuReset,
+        btnC => btnC,
+        btnU => btnU,
+        btnL => btnL,
+        btnR => btnR,
+        btnD => btnD,  
+        
 	    -- BLG END
 	   -- no_ddr_start    => no_ddr_start,
 	    --no_ddr_stop	    => no_ddr_stop,

@@ -33,8 +33,6 @@ vhdl work ../HDL/PLASMA/memory_64k.vhd
 vhdl work ../HDL/PLASMA/mlite_cpu.vhd
 vhdl work ../HDL/PLASMA/mlite_pack.vhd
 vhdl work ../HDL/PLASMA/mult.vhd
-vhdl work ../HDL/PLASMA/pcie_in.vhd
-vhdl work ../HDL/PLASMA/pcie_out.vhd
 vhdl work ../HDL/PLASMA/pc_next.vhd
 vhdl work ../HDL/PLASMA/pipeline.vhd
 vhdl work ../HDL/PLASMA/plasma.vhd
