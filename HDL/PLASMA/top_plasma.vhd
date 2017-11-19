@@ -28,7 +28,13 @@ entity top_plasma is port(
    VGA_vs       : out std_logic;   -- vertical vga syncr.
    VGA_red      : out std_logic_vector(3 downto 0);   -- red output
    VGA_green    : out std_logic_vector(3 downto 0);   -- green output
-   VGA_blue     : out std_logic_vector(3 downto 0)   -- blue output
+   VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
+
+		btnU : in std_logic;
+		btnD : in std_logic;
+		btnL : in std_logic;
+		btnR : in std_logic
+
 	);
 end top_plasma;
 
@@ -117,6 +123,11 @@ end process;
 		VGA_green => VGA_green,
 		VGA_blue => VGA_blue,
 		
+		btnU => btnU,
+		btnD => btnD,
+		btnL => btnL,
+		btnR => btnR,
+
 		gpio0_out       => open,
 		gpioA_in        => x"00000000" --open
 	);

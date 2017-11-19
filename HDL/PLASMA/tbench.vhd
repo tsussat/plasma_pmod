@@ -63,6 +63,8 @@ ARCHITECTURE logic OF tbench IS
     
     SIGNAL clk_VGA : STD_LOGIC:='0';
     
+    signal btnU, btnD,  btnL, btnR : std_logic;
+    
 component plasma is
    generic(memory_type : string := "XILINX_16X"; --"DUAL_PORT_" "ALTERA_LPM";
            log_file    : string := "UNUSED";
@@ -106,7 +108,11 @@ component plasma is
                                 VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
 
 				-- BLG END
-
+            btnU : in std_logic;
+            btnD : in std_logic;
+            btnL : in std_logic;
+            btnR : in std_logic;
+            
 				gpio0_out    : out std_logic_vector(31 downto 0);
 				gpioA_in     : in  std_logic_vector(31 downto 0));
 end component; --entity plasma
@@ -165,6 +171,10 @@ BEGIN  --architecture
 		VGA_green => open,
 		VGA_blue => open,
 	    
+	    btnU => btnU,
+            btnD => btnD,
+            btnL => btnL,
+            btnR => btnR,
 	    -- BLG END
 	   -- no_ddr_start    => no_ddr_start,
 	    --no_ddr_stop	    => no_ddr_stop,

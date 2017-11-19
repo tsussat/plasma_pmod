@@ -622,6 +622,24 @@ PACKAGE mlite_pack IS
     ---------------------------------------------------------------------------------------
 
     ---------------------------------------------------------------------------------------
+component buttons_controller
+   port(
+		clock          : in  std_logic;
+		reset          : in  std_logic;
+		buttons_access : in  std_logic;
+
+		btnU : in std_logic;
+		btnD : in std_logic;
+		btnL : in std_logic;
+		btnR : in std_logic;
+
+		buttons_values : out std_logic_vector(31 downto 0);
+		buttons_change : out std_logic_vector(31 downto 0)
+	);
+end component; --buttons_controller
+    ---------------------------------------------------------------------------------------
+
+    ---------------------------------------------------------------------------------------
     COMPONENT eth_dma
         PORT(clk         : IN  std_logic;  --25 MHz
              reset       : IN  std_logic;
@@ -681,6 +699,18 @@ PACKAGE mlite_pack IS
             fifo_2_valid    : IN  std_logic;
             fifo_1_compteur : IN  std_logic_vector (31 DOWNTO 0);
             fifo_2_compteur : IN  std_logic_vector (31 DOWNTO 0);
+
+				VGA_hs       : out std_logic;   -- horisontal vga syncr.
+				VGA_vs       : out std_logic;   -- vertical vga syncr.
+				VGA_red      : out std_logic_vector(3 downto 0);   -- red output
+				VGA_green    : out std_logic_vector(3 downto 0);   -- green output
+				VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
+
+				btnU : in std_logic;
+				btnD : in std_logic;
+				btnL : in std_logic;
+				btnR : in std_logic;
+
             gpio0_out       : OUT std_logic_vector(31 DOWNTO 0);
             gpioA_in        : IN  std_logic_vector(31 DOWNTO 0)
             );
