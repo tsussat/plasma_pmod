@@ -125,11 +125,6 @@ entity plasma is
                 btnR         : in std_logic;
                 btnD         : in std_logic;
 
-				btnU : in std_logic;
-				btnD : in std_logic;
-				btnL : in std_logic;
-				btnR : in std_logic;
-
 				gpio0_out    : out std_logic_vector(31 downto 0);
 				gpioA_in     : in  std_logic_vector(31 downto 0));
 end; --entity plasma

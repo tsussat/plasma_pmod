@@ -161,4 +161,3 @@ begin
 --	OUTPUT_1 <= STD_LOGIC_VECTOR( mem );
 
 end; --architecture logic
-

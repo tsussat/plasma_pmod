@@ -1,5 +1,6 @@
 vhdl work ../HDL/PLASMA/alu.vhd
 vhdl work ../HDL/PLASMA/bus_mux.vhd
+vhdl work ../HDL/PLASMA/buttons.vhd
 vhdl work ../HDL/PLASMA/cam_pkg.vhd
 vhdl work ../HDL/PLASMA/comb_alu_1.vhd
 vhdl work ../HDL/PLASMA/control.vhd
