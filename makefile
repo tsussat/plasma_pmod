@@ -112,8 +112,6 @@ send:
 	$(LD_MIPS) -Ttext 0x10000000 -eentry -Map test.map -s -N -o test.axf uboot.o main.o no_os.o
 
 	$(CONVERT_BIN)
-	g++ $(C_DIR)/tools/prog_format_for_boot_loader/main.cpp -std=c++11 -o $(C_DIR)/tools/prog_format_for_boot_loader/send.out
-	sudo $(C_DIR)/tools/prog_format_for_boot_loader/send.out test.bin
 
 dasm:
 	mips-elf-gcc -O3 -Wall -c -s -funroll-loops -mips1 -mtune=mips1 -msoft-float -std=c99 -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/main.c -S
