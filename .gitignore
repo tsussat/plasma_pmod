@@ -14,3 +14,5 @@ code_bin.txt
 code.txt
 pcie_in.txt
 pcie_out.txt
+SYNTHESIS/top_plasma.bit
+test.bin
