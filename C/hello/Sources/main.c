@@ -14,6 +14,8 @@ int main(int argc, char ** argv) {
 	puts("Hello world !\n");
 
 	while (1) {
+		if (MemoryRead(0x20000104) == 0)
+			continue;
 
 		buttons = MemoryRead(0x20000100);
 		puts("button status: ");

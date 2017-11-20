@@ -24,7 +24,7 @@
 --   0x20000060  Counter
 --   0x20000070  Ethernet transmit count
 --   0x20000100  Buttons controller values
---   0x20000110  Buttons controller change
+--   0x20000104  Buttons controller change
 --   IRQ bits:
 --      7   GPIO31
 --      6  ^GPIO31
@@ -267,11 +267,10 @@ begin  --architecture
    enable_uart_read        <= enable_uart and not write_enable;
    enable_uart_write       <= enable_uart and write_enable;
    enable_eth              <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
-   enable_buttons <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
+   enable_buttons <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "10000" else '0';
    enable_vga <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "10010" else '0';
    enable_vga_read <= enable_vga and not write_enable;
    enable_vga_write <= enable_vga and  write_enable;
-   
 
    cpu_address(1 downto 0) <= "00";
 
