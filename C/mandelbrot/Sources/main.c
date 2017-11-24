@@ -123,7 +123,7 @@ int main( int argc, char ** argv ) {
       int pixel = ((i>>4)<<8|(i>>4)<<4|(i>>4));
       // my_printf("px :",pixel);
       //coproc_write(COPROC_4_RW, pixel);
-      MemoryWrite(VGA_WRITE, pixel);
+      MemoryWrite(0x20000120, pixel);
       //coproc_write(COPROC_4_RW, i);
       //coproc_write(COPROC_4_RW, i);
     }

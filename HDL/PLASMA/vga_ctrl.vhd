@@ -92,8 +92,8 @@ begin
 				counter <= 0;
 			ELSE
 				IF vga_w_en = '1' THEN
-					--IF counter < 307199 THEN
-					IF counter < 16383 THEN
+					IF counter < 307199 THEN
+					--IF counter < 16383 THEN
 						counter <= counter + 1;
 					ELSE
 						counter <= 0;

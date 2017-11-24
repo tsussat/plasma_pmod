@@ -16,8 +16,8 @@
 #MY_PROJECT=filtre_no_fifo
 #MY_PROJECT=tuto_plasma
 #MY_PROJECT=mandelbrot
-MY_PROJECT=boot_loader
-#MY_PROJECT=hello
+#MY_PROJECT=boot_loader
+MY_PROJECT=hello
 
 SRC_DIR=Sources
 INC_DIR=Includes
@@ -99,6 +99,10 @@ vhdl:
 simu:
 	xsim tbench --nolog -t $(SIM_DIR)/simu_run.tcl
 	#rm ./code_bin.txt
+
+simu_modelsim:
+	vsim tbench -c -quiet -do "set NumericStdNoWarnings 1; set StdArithNoWarnings 1; run -all; exit"
+	rm ./code_bin.txt
 
 send:
 	$(GCC_MIPS) -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/main.c
