@@ -25,7 +25,7 @@ int main(int argc, char ** argv) {
 			for(int px = 0; px < W; px ++)
 			{
 				int i = px+py;
-				int pixel = ((i>>4)<<8|(i>>4)<<4|(i>>4));
+				int pixel = ((px>>4)<<8|(py>>4)<<4|(i>>4));
 				MemoryWrite(0x20000120, pixel);		
 			}
 		}
