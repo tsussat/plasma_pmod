@@ -141,6 +141,7 @@ architecture logic of plasma is
    signal ppcie_rdata       : std_logic_vector(31 downto 0);
 
    signal data_read_uart    : std_logic_vector(7 downto 0);
+   --signal data_vga_read     : std_logic_vector(31 downto 0);
    signal write_enable      : std_logic;
    signal eth_pause_in      : std_logic;
    signal eth_pause         : std_logic;
@@ -153,6 +154,9 @@ architecture logic of plasma is
    signal enable_eth        : std_logic;
    signal enable_local_mem  : std_logic;
    signal enable_buttons    : std_logic;	
+   --signal enable_vga        : std_logic;
+   --signal enable_vga_read   : std_logic;
+   --signal enable_vga_write  : std_logic;
 
    signal buttons_values    : std_logic_vector(31 downto 0);
    signal buttons_change    : std_logic_vector(31 downto 0);
@@ -208,6 +212,23 @@ architecture logic of plasma is
            we_select : in   STD_LOGIC_VECTOR (3 downto 0);
            data_out  : out  STD_LOGIC_VECTOR (31 downto 0));
 	end COMPONENT;
+	
+	component vga_ctrl is
+      port(
+         clock           : in  std_logic;
+         clock_vga       : in  std_logic;
+         reset           : in  std_logic;
+         vga_w           : in  std_logic_vector(31 downto 0);
+         vga_w_en        : in  std_logic;
+         vga_r           : out std_logic_vector(31 downto 0);
+         vga_r_en        : in std_logic;
+         VGA_hs          : out std_logic;   -- horisontal vga syncr.
+         VGA_vs          : out std_logic;   -- vertical vga syncr.
+         VGA_red         : out std_logic_vector(3 downto 0);   -- red output
+         VGA_green       : out std_logic_vector(3 downto 0);   -- green output
+         VGA_blue        : out std_logic_vector(3 downto 0)   -- blue output
+      );
+   end component;
 
 begin  --architecture
 
@@ -247,6 +268,10 @@ begin  --architecture
    enable_uart_write       <= enable_uart and write_enable;
    enable_eth              <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
    enable_buttons <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
+   --enable_vga <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "10010" else '0';
+   --enable_vga_read <= enable_vga and not write_enable;
+   --enable_vga_write <= enable_vga and  write_enable;
+   
 
    cpu_address(1 downto 0) <= "00";
 
@@ -287,15 +312,17 @@ begin  --architecture
 	--
 --	enable_local_mem        <= '1' when (cpu_address(31 downto 28) = "0001") else '0';
 --	enable_local_mem <= '1' when (ram_address(31 downto 28) = "0001") else '0';
-   local_memory: memory_64k 
-      port map (
-         clk        => clk,
-			addr_in	  => ram_address, --cpu_data_r,
-         data_in    => ram_data_w,
-         enable     => enable_local_mem,
-         we_select  => ram_byte_we,
-         data_out   => ram_data_lm
-		);
+
+
+--   local_memory: memory_64k 
+--      port map (
+--         clk        => clk,
+--			addr_in	  => ram_address, --cpu_data_r,
+--         data_in    => ram_data_w,
+--         enable     => enable_local_mem,
+--         we_select  => ram_byte_we,
+--         data_out   => ram_data_lm
+--		);
 
 	--
 	--
@@ -395,8 +422,10 @@ begin  --architecture
             		cpu_data_r <= counter_reg;
          		when "10000" =>      --buttons
             		cpu_data_r <= buttons_values;
-         		when "10001" =>      --buttoms
+         		when "10001" =>      --buttons
             		cpu_data_r <= buttons_change;
+      --      	when "10010" => -- vga
+        --    	  cpu_data_r <= data_vga_read;
 			when others =>		 -- ce n'est pas pr\E9vu...
 			cpu_data_r <= x"FFFFFFFF";
 		end case;
@@ -560,6 +589,21 @@ begin  --architecture
          buttons_change => buttons_change
       );
 
+--   vga_controler: vga_ctrl port map(
+--		clock          => clk,
+--		clock_VGA      => clk_VGA,
+--		reset          => reset,
+--		vga_w         => cpu_data_w,
+--		vga_w_en  => enable_vga_write,
+--		vga_r       => data_vga_read,
+--		vga_r_en => enable_vga_read,
+--		VGA_hs => VGA_hs,
+--		VGA_vs => VGA_vs,
+--		VGA_red => VGA_red,
+--		VGA_green => VGA_green,
+--		VGA_blue => VGA_blue
+--	);
+	
 	--
 	-- ETHERNET CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)
 	--
@@ -701,6 +745,14 @@ begin  --architecture
 		INPUT_1_valid  => cop_3_valid,
 		OUTPUT_1       => cop_3_output
 	);
+	
+--	u5d_coproc: entity WORK.coproc_3 port map(-- atention 2x coproc 3
+--         clock          => clk,
+--         reset          => cop_4_reset,
+--         INPUT_1        => cpu_data_w,
+--         INPUT_1_valid  => cop_4_valid,
+--         OUTPUT_1       => cop_4_output
+--      );
 
    u5d_coproc: entity WORK.coproc_4 port map(
 		clock          => clk,

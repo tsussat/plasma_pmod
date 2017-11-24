@@ -20,6 +20,8 @@
 #define MISC_BASE         0x20000000
 #define UART_WRITE        0x20000000
 #define UART_READ         0x20000000
+#define VGA_READ          0x20000120
+#define VGA_WRITE         0x20000120
 #define IRQ_MASK          0x20000010
 #define IRQ_STATUS        0x20000020
 #define GPIO0_OUT         0x20000030

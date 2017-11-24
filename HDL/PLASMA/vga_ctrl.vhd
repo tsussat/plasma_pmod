@@ -14,23 +14,24 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.mlite_pack.all;
 
-entity coproc_4 is
-   port(
-		clock          : in  std_logic;
-		clock_vga      : in  std_logic;
-		reset          : in  std_logic;
-		INPUT_1        : in  std_logic_vector(31 downto 0);
-		INPUT_1_valid  : in  std_logic;
-		OUTPUT_1       : out std_logic_vector(31 downto 0);
-		VGA_hs       	: out std_logic;   -- horisontal vga syncr.
-      VGA_vs       	: out std_logic;   -- vertical vga syncr.
-      VGA_red      	: out std_logic_vector(3 downto 0);   -- red output
-      VGA_green    	: out std_logic_vector(3 downto 0);   -- green output
-      VGA_blue    	 : out std_logic_vector(3 downto 0)   -- blue output
-	);
-end; --comb_alu_1
+entity vga_ctrl is
+      port(
+         clock           : in  std_logic;
+         clock_vga       : in  std_logic;
+         reset           : in  std_logic;
+         vga_w           : in  std_logic_vector(31 downto 0);
+         vga_w_en        : in  std_logic;
+         vga_r           : out std_logic_vector(31 downto 0);
+         vga_r_en        : in std_logic;
+         VGA_hs          : out std_logic;   -- horisontal vga syncr.
+         VGA_vs          : out std_logic;   -- vertical vga syncr.
+         VGA_red         : out std_logic_vector(3 downto 0);   -- red output
+         VGA_green       : out std_logic_vector(3 downto 0);   -- green output
+         VGA_blue        : out std_logic_vector(3 downto 0)   -- blue output
+      );
+end vga_ctrl;
 
-architecture logic of coproc_4 is
+architecture logic of vga_ctrl is
 
 component VGA_bitmap_640x480 is
   generic(bit_per_pixel : integer range 1 to 12:=1;    -- number of bits per pixel
@@ -90,9 +91,9 @@ begin
 			IF reset = '1' THEN
 				counter <= 0;
 			ELSE
-				IF INPUT_1_valid = '1' THEN
-					IF counter < 307199 THEN
-					--IF counter < 16383 THEN
+				IF vga_w_en = '1' THEN
+					--IF counter < 307199 THEN
+					IF counter < 16383 THEN
 						counter <= counter + 1;
 					ELSE
 						counter <= 0;
@@ -136,11 +137,11 @@ begin
 				VGA_green  => VGA_green,
 				VGA_blue   => VGA_blue,
 				ADDR       => tmp_addr, 
-				data_in    => INPUT_1(11 downto 0),
-				data_write => INPUT_1_valid,
+				data_in    => vga_w(11 downto 0),
+				data_write => vga_w_en,
 				data_out   => open);
 	
-		OUTPUT_1 <= "0000000000000"&tmp_addr;
+		vga_r <= "0000000000000"&tmp_addr;
 
 
 --	tmp_addr <= std_logic_vector(to_signed(counter, 14));

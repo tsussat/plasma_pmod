@@ -50,30 +50,9 @@ component VGA_bitmap_640x480 is
        data_out     : out std_logic_vector(bit_per_pixel - 1 downto 0));
 end component;
 
-component VGA_bitmap_160x100 is
-  generic(bit_per_pixel : integer range 1 to 12:=1;    -- number of bits per pixel
-          grayscale     : boolean := false);           -- should data be displayed in grayscale
-  port(clk          : in  std_logic;
-		 clk_vga      : in  std_logic;
-       reset        : in  std_logic;
-       VGA_hs       : out std_logic;   -- horisontal vga syncr.
-       VGA_vs       : out std_logic;   -- vertical vga syncr.
-       VGA_red      : out std_logic_vector(3 downto 0);   -- red output
-       VGA_green    : out std_logic_vector(3 downto 0);   -- green output
-       VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
-
-       ADDR         : in  std_logic_vector(13 downto 0);
-       data_in      : in  std_logic_vector(bit_per_pixel - 1 downto 0);
-       data_write   : in  std_logic;
-       data_out     : out std_logic_vector(bit_per_pixel - 1 downto 0));
-end component;
-
-
 	SIGNAL mem : UNSIGNED(31 downto 0);
-	signal tmp_addr : std_logic_vector(18 downto 0);
-	--signal tmp_addr : std_logic_vector(13 downto 0);
-	signal pixel : std_logic_vector(7 downto 0);
-	--signal tmp_out : std_logic_vector(10 downto 0);
+	signal tmp_addr : std_logic_vector(18 downto 0); 
+	signal pixel, tmp_out : std_logic_vector(3 downto 0);
 	signal data_write : std_logic;
 	signal counter : integer range 0 to 307199:= 0;
 begin
@@ -91,8 +70,7 @@ begin
 				counter <= 0;
 			ELSE
 				IF INPUT_1_valid = '1' THEN
-					IF counter < 307199 THEN
-					--IF counter < 16383 THEN
+					IF counter < 307199 THEN -- for VGa 640x480
 						counter <= counter + 1;
 					ELSE
 						counter <= 0;
@@ -117,15 +95,14 @@ begin
 --					data_write <= '1';
 --				else
 --					data_write <= '0';
---				END IF;
+--				END IF; 
 --			END IF;
 --		END IF;
 --	end process;
 --	
-
 	tmp_addr <= std_logic_vector(to_signed(counter, 19));
 	
-		vga : VGA_bitmap_640x480 generic map(12, false)           -- should data be displayed in grayscale
+		vga : VGA_bitmap_640x480 generic map(4, true)           -- should data be displayed in grayscale
 		port map(
 				clk        => clock,
 				clk_vga    => clock_vga,
@@ -136,32 +113,11 @@ begin
 				VGA_green  => VGA_green,
 				VGA_blue   => VGA_blue,
 				ADDR       => tmp_addr, 
-				data_in    => INPUT_1(11 downto 0),
+				data_in    => INPUT_1(3 downto 0),
 				data_write => INPUT_1_valid,
-				data_out   => open);
-	
+				data_out   => tmp_out);
+
 		OUTPUT_1 <= "0000000000000"&tmp_addr;
-
-
---	tmp_addr <= std_logic_vector(to_signed(counter, 14));
-	
---		vga : VGA_bitmap_160x100 generic map(12, false)           -- should data be displayed in grayscale
---		port map(
---				clk        => clock,
---				clk_vga    => clock_vga,
---				reset      => reset,
---				VGA_hs     => VGA_hs,
---				VGA_vs     => VGA_vs,
---				VGA_red    => VGA_red,
---				VGA_green  => VGA_green,
---				VGA_blue   => VGA_blue,
---				ADDR       => tmp_addr, 
---				data_in    => INPUT_1(11 downto 0),
---				data_write => INPUT_1_valid,
---				data_out   => open);
-	
---		OUTPUT_1 <= "000000000000000000"&tmp_addr;
-
 
 	
 	
@@ -204,5 +160,3 @@ begin
 --	OUTPUT_1 <= STD_LOGIC_VECTOR( mem );
 
 end; --architecture logic
-
-
