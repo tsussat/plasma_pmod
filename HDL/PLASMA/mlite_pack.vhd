@@ -628,6 +628,7 @@ component buttons_controller
 		reset          : in  std_logic;
 		buttons_access : in  std_logic;
 
+		btnC : in std_logic;
 		btnU : in std_logic;
 		btnD : in std_logic;
 		btnL : in std_logic;

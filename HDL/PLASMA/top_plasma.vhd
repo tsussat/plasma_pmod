@@ -67,7 +67,7 @@ architecture rtl of top_plasma is
 
 begin
 
-   rst <= btnC;
+   rst <= not btnCpuReset;
 
 
 

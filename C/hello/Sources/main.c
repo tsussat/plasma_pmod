@@ -14,10 +14,10 @@ int main(int argc, char ** argv) {
 	puts("Hello world !\n");
 
 	while (1) {
-		if (MemoryRead(0x20000104) == 0)
+		if (MemoryRead(BUTTONS_CHANGE) == 0)
 			continue;
 
-		buttons = MemoryRead(0x20000100);
+		buttons = MemoryRead(BUTTONS_VALUES);
 		puts("button status: ");
 		print_hex(buttons);
 		puts("\n");

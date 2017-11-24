@@ -20,6 +20,7 @@ entity buttons_controller is
 		reset          : in  std_logic;
 		buttons_access : in  std_logic;
 
+		btnC : in std_logic;
 		btnU : in std_logic;
 		btnD : in std_logic;
 		btnL : in std_logic;
@@ -34,10 +35,11 @@ architecture logic of buttons_controller is
 	SIGNAL buttons_input  : std_logic_vector(31 downto 0);
 	SIGNAL buttons_buffer : std_logic_vector(31 downto 0);
 begin
-	buttons_input(0) <= btnU;
-	buttons_input(1) <= btnD;
-	buttons_input(2) <= btnL;
-	buttons_input(3) <= btnR;
+	buttons_input(0) <= btnC;
+	buttons_input(1) <= btnU;
+	buttons_input(2) <= btnD;
+	buttons_input(3) <= btnL;
+	buttons_input(4) <= btnR;
 
 	-------------------------------------------------------------------------
 	process (clock, reset)

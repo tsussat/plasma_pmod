@@ -23,8 +23,6 @@
 --   0x20000050  GPIOA In
 --   0x20000060  Counter
 --   0x20000070  Ethernet transmit count
---   0x20000100  Buttons controller values
---   0x20000104  Buttons controller change
 --   IRQ bits:
 --      7   GPIO31
 --      6  ^GPIO31
@@ -55,6 +53,9 @@
 
 --   0x40000090  COPROCESSOR 4 (reset)
 --   0x400000A0  COPROCESSOR 4 (input/output)
+
+--   0x40000100  Buttons controller values
+--   0x40000104  Buttons controller change
 
 --   0x80000000  DMA ENGINE (NOT WORKING YET)
 ---------------------------------------------------------------------
@@ -233,7 +234,7 @@ architecture logic of plasma is
 begin  --architecture
 
 
-   RGB1_Red <= btnCpuReset;
+   RGB1_Red <= not btnCpuReset;
    RGB1_Green <= btnD;
    RGB1_Blue <= btnU;
    RGB2_Red <= btnR;
@@ -267,7 +268,6 @@ begin  --architecture
    enable_uart_read        <= enable_uart and not write_enable;
    enable_uart_write       <= enable_uart and write_enable;
    enable_eth              <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "00111" else '0';
-   enable_buttons <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "10000" else '0';
    enable_vga <= '1' when enable_misc = '1' and cpu_address(8 downto 4) = "10010" else '0';
    enable_vga_read <= enable_vga and not write_enable;
    enable_vga_write <= enable_vga and  write_enable;
@@ -293,6 +293,9 @@ begin  --architecture
 
    cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
    cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+
+   enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
+
 --   assert cop_4_valid /= '1' severity failure;
 	--
 	-- ON LIT/ECRIT DANS LA MEMOIRE LOCALE UNIQUEMENT LORSQUE LE BUS
@@ -382,7 +385,7 @@ begin  --architecture
 	--
 	--
    misc_proc: process(clk, reset, cpu_address, enable_misc,
-      ram_data_r, data_read_uart, cpu_pause,
+      ram_data_r, data_read_uart, cpu_pause, enable_buttons,
       irq_mask_reg, irq_status, gpio0_reg, write_enable,
       cache_checking,
       gpioA_in, counter_reg, cpu_data_w, ram_data_lm,
@@ -423,8 +426,8 @@ begin  --architecture
             		cpu_data_r <= buttons_values;
          		when "10001" =>      --buttons
             		cpu_data_r <= buttons_change;
-            	when "10010" => -- vga
-            	  cpu_data_r <= data_vga_read;
+            		when "10010" => -- vga
+            	  	cpu_data_r <= data_vga_read;
 			when others =>		 -- ce n'est pas pr\E9vu...
 			cpu_data_r <= x"FFFFFFFF";
 		end case;
@@ -449,19 +452,26 @@ begin  --architecture
 			-- LECTURE DES RESULTATS DES COPROCESSEURS
 			--
 	when "100" =>
-         	case cpu_address(7 downto 0) is
-					when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
-					when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
-					when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
-					when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
-					when others =>	 cpu_data_r <= x"FFFFFFFF";
-         	end case;
+		case cpu_address is
+			when x"40000100" => cpu_data_r <= buttons_values;
+			when x"40000104" => cpu_data_r <= buttons_change;
+			when others => 
+			 	case cpu_address(7 downto 0) is
+							when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
+							when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
+							when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
+							when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
+							when others =>	 cpu_data_r <= x"FFFFFFFF";
+			 	end case;
+		end case;
 
 			--when "011" =>         --flash
          --	cpu_data_r <= data_read;
       	when others =>
       	   cpu_data_r <= ZERO(31 downto 8) & x"FF";
       end case;
+
+
 
       if reset = '1' then
          irq_mask_reg <= ZERO(7 downto 0);
@@ -580,6 +590,7 @@ begin  --architecture
          clock          => clk,
          reset        => reset,
          buttons_access => enable_buttons,
+	 btnC => btnC,
 	 btnU => btnU,
          btnD => btnD,
          btnL => btnL,

@@ -30,6 +30,8 @@
 #define COUNTER_REG       0x20000060
 #define ETHERNET_REG      0x20000070
 #define FLASH_BASE        0x30000000
+#define BUTTONS_VALUES    0x40000100
+#define BUTTONS_CHANGE    0x40000104
 
 /*********** GPIO out bits ***************/
 #define ETHERNET_MDIO     0x00200000
