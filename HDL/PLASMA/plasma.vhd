@@ -599,20 +599,20 @@ begin  --architecture
          buttons_change => buttons_change
       );
 
-   vga_controler: vga_ctrl port map(
-		clock          => clk,
-		clock_VGA      => clk_VGA,
-		reset          => reset,
-		vga_w         => cpu_data_w,
-		vga_w_en  => enable_vga_write,
-		vga_r       => data_vga_read,
-		vga_r_en => enable_vga_read,
-		VGA_hs => VGA_hs,
-		VGA_vs => VGA_vs,
-		VGA_red => VGA_red,
-		VGA_green => VGA_green,
-		VGA_blue => VGA_blue
-	);
+--   vga_controler: vga_ctrl port map(
+--		clock          => clk,
+--		clock_VGA      => clk_VGA,
+--		reset          => reset,
+--		vga_w         => cpu_data_w,
+--		vga_w_en  => enable_vga_write,
+--		vga_r       => data_vga_read,
+--		vga_r_en => enable_vga_read,
+--		VGA_hs => VGA_hs,
+--		VGA_vs => VGA_vs,
+--		VGA_red => VGA_red,
+--		VGA_green => VGA_green,
+--		VGA_blue => VGA_blue
+--	);
 	
 	--
 	-- ETHERNET CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)
