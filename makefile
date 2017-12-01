@@ -17,7 +17,8 @@
 #MY_PROJECT=tuto_plasma
 #MY_PROJECT=mandelbrot
 #MY_PROJECT=boot_loader
-MY_PROJECT=hello
+#MY_PROJECT=hello
+MY_PROJECT=switch_led
 
 SRC_DIR=Sources
 INC_DIR=Includes

@@ -54,6 +54,9 @@
 --   0x40000090  COPROCESSOR 4 (reset)
 --   0x400000A0  COPROCESSOR 4 (input/output)
 
+--   0x400000C0  CONTROLLER SWITCH LED (reset)
+--   0x400000D0  CONTROLLER SWITCH LED (input/output)
+
 --   0x40000100  Buttons controller values
 --   0x40000104  Buttons controller change
 
@@ -159,6 +162,10 @@ architecture logic of plasma is
    signal enable_vga_read   : std_logic;
    signal enable_vga_write  : std_logic;
 
+   signal ctrl_SL_reset     : std_logic;
+   signal ctrl_SL_valid	    : std_logic;
+   signal ctrl_SL_output    : std_logic_vector(31 downto 0);
+
    signal buttons_values    : std_logic_vector(31 downto 0);
    signal buttons_change    : std_logic_vector(31 downto 0);
 
@@ -231,17 +238,35 @@ architecture logic of plasma is
       );
    end component;
 
+	component ctrl_SL is
+	   port(
+	   		clock			: in  std_logic;
+			reset			: in  std_logic;
+			INPUT_1			: in  std_logic_vector(31 downto 0);
+			INPUT_1_valid	: in  std_logic;
+			OUTPUT_1		: out std_logic_vector(31 downto 0);
+			SW				: in std_logic_vector(15 downto 0);
+			LED				: out std_logic_vector(15 downto 0);
+			RGB1_Red		: out  std_logic;
+			RGB2_Red		: out  std_logic;
+			RGB1_Green		: out  std_logic;
+			RGB2_Green		: out  std_logic;
+			RGB1_Blue		: out  std_logic;
+			RGB2_Blue		: out  std_logic
+		);
+	end component;
+
 begin  --architecture
 
 
-   RGB1_Red <= not btnCpuReset;
-   RGB1_Green <= btnD;
-   RGB1_Blue <= btnU;
-   RGB2_Red <= btnR;
-   RGB2_Green <= btnL;
-   RGB2_Blue <= btnC;
+   --RGB1_Red <= not btnCpuReset;
+   --RGB1_Green <= btnD;
+   --RGB1_Blue <= btnU;
+   --RGB2_Red <= btnR;
+   --RGB2_Green <= btnL;
+   --RGB2_Blue <= btnC;
    
-   led <= sw;
+   --led <= sw;
    
    seg <= "1011010";
    an <= sw(7 downto 0);
@@ -293,6 +318,9 @@ begin  --architecture
 
    cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
    cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+
+   ctrl_SL_reset <= '1' when (cpu_address = x"400000C0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   ctrl_SL_valid <= '1' when (cpu_address = x"400000C4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
    enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
 
@@ -461,6 +489,7 @@ begin  --architecture
 							when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
 							when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
 							when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
+							when "11000100"  => cpu_data_r <= ctrl_SL_output;    -- CONTROLLER SWITCH LED (OUTPUT)
 							when others =>	 cpu_data_r <= x"FFFFFFFF";
 			 	end case;
 		end case;
@@ -756,6 +785,23 @@ begin  --architecture
 		OUTPUT_1       => cop_3_output
 	);
 	
+-- Controller Switchs/Leds
+	plasma_ctrl_SL: ctrl_SL port map (
+		clock			=> clk,
+		reset			=> ctrl_SL_reset,
+		INPUT_1			=> cpu_data_w,
+		INPUT_1_valid	=> ctrl_SL_valid,
+		OUTPUT_1		=> ctrl_SL_output,
+		SW				=> sw,
+		LED				=> led,
+		RGB1_Red		=> RGB1_Red,
+		RGB2_Red		=> RGB2_Red,
+		RGB1_Green		=> RGB1_Green,
+		RGB2_Green		=> RGB2_Green,
+		RGB1_Blue		=> RGB1_Blue,
+		RGB2_Blue		=> RGB2_Blue
+	);
+
 --	u5d_coproc: entity WORK.coproc_3 port map(-- atention 2x coproc 3
 --         clock          => clk,
 --         reset          => cop_4_reset,
