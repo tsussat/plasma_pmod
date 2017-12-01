@@ -15,6 +15,9 @@
 #define COPROC_4_RST 0x40000090
 #define COPROC_4_RW 0x40000094
 
+#define CTRL_SL_RST 0x400000C0
+#define CTRL_SL_RW 0x400000C4
+
 
 
 //int buffer[64];
