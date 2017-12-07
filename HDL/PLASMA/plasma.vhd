@@ -761,29 +761,29 @@ begin  --architecture
 	--
 	------------------------------------------------------------------------------------------------------
 
-   u5a_coproc: entity WORK.coproc_1 port map(
-		clock          => clk,
-		reset          => cop_1_reset,
-		INPUT_1        => cpu_data_w,
-		INPUT_1_valid  => cop_1_valid,
-		OUTPUT_1       => cop_1_output
-	);
+--   u5a_coproc: entity WORK.coproc_1 port map(
+--		clock          => clk,
+--		reset          => cop_1_reset,
+--		INPUT_1        => cpu_data_w,
+--		INPUT_1_valid  => cop_1_valid,
+--		OUTPUT_1       => cop_1_output
+--	);
 
-   u5b_coproc: entity WORK.coproc_2 port map(
-		clock          => clk,
-		reset          => cop_2_reset,
-		INPUT_1        => cpu_data_w,
-		INPUT_1_valid  => cop_2_valid,
-		OUTPUT_1       => cop_2_output
-	);
+--   u5b_coproc: entity WORK.coproc_2 port map(
+--		clock          => clk,
+--		reset          => cop_2_reset,
+--		INPUT_1        => cpu_data_w,
+--		INPUT_1_valid  => cop_2_valid,
+--		OUTPUT_1       => cop_2_output
+--	);
 
-   u5c_coproc: entity WORK.coproc_3 port map(
-		clock          => clk,
-		reset          => cop_3_reset,
-		INPUT_1        => cpu_data_w,
-		INPUT_1_valid  => cop_3_valid,
-		OUTPUT_1       => cop_3_output
-	);
+--   u5c_coproc: entity WORK.coproc_3 port map(
+--		clock          => clk,
+--		reset          => cop_3_reset,
+--		INPUT_1        => cpu_data_w,
+--		INPUT_1_valid  => cop_3_valid,
+--		OUTPUT_1       => cop_3_output
+--	);
 	
 -- Controller Switchs/Leds
 	plasma_ctrl_SL: ctrl_SL port map (
