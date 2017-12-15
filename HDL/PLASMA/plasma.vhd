@@ -33,7 +33,7 @@
 --      1  ^UartWriteBusy
 --      0   UartDataAvailable
 --   0x30000000  FIFO IN  EMPTY
---   0x30000010  FIFO OUT EMPTY  
+--   0x30000010  FIFO OUT EMPTY
 --   0x30000020  FIFO IN  VALID
 --   0x30000030  FIFO OUT VALID
 --   0x30000040  FIFO IN  FULL
@@ -51,8 +51,11 @@
 --   0x40000060  COPROCESSOR 3 (reset)
 --   0x40000070  COPROCESSOR 3 (input/output)
 
---   0x40000090  COPROCESSOR 4 (reset)
---   0x400000A0  COPROCESSOR 4 (input/output)
+----   0x40000090  COPROCESSOR 4 (reset)
+----   0x400000A0  COPROCESSOR 4 (input/output)
+
+--   0x40000090  OLED (reset)
+--   0x400000A0  OLED (input/output)
 
 --   0x400000C0  CONTROLLER SWITCH LED (reset)
 --   0x400000D0  CONTROLLER SWITCH LED (input/output)
@@ -71,7 +74,9 @@ entity plasma is
            log_file    : string := "UNUSED";
            ethernet    : std_logic  := '0';
            eUart       : std_logic  := '0';
-           use_cache   : std_logic  := '0');
+           use_cache   : std_logic  := '0';
+           CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+           LEFT_SIDE   : boolean := False );
    port(clk          : in std_logic;
 			clk_VGA			: in std_logic;
 				reset        : in std_logic;
@@ -80,13 +85,13 @@ entity plasma is
 				uart_read    : in std_logic;
 
 				address      : out std_logic_vector(31 downto 2);
-				byte_we      : out std_logic_vector(3  downto 0); 
+				byte_we      : out std_logic_vector(3  downto 0);
 				--data_write   : out std_logic_vector(31 downto 0);
 				--data_read    : in  std_logic_vector(31 downto 0);
 				---mem_pause_in : in std_logic;
 				no_ddr_start : out std_logic;
 				no_ddr_stop  : out std_logic;
-        
+
 				-- BLG START
 				fifo_1_out_data  : IN  STD_LOGIC_VECTOR (31 DOWNTO 0);
 				fifo_1_read_en   : OUT STD_LOGIC;
@@ -94,34 +99,43 @@ entity plasma is
 				fifo_2_in_data   : OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
 				fifo_1_write_en  : OUT STD_LOGIC;
 				fifo_2_full      : IN  STD_LOGIC;
-	 
+
 				fifo_1_full      : IN STD_LOGIC;
-				fifo_1_valid     : IN STD_LOGIC;  
+				fifo_1_valid     : IN STD_LOGIC;
 				fifo_2_empty     : IN STD_LOGIC;
 				fifo_2_valid     : IN STD_LOGIC;
 				fifo_1_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
 				fifo_2_compteur  : IN STD_LOGIC_VECTOR (31 DOWNTO 0);
 				-- BLG END
-				
+
 				VGA_hs       : out std_logic;   -- horisontal vga syncr.
 				VGA_vs       : out std_logic;   -- vertical vga syncr.
 				VGA_red      : out std_logic_vector(3 downto 0);   -- red output
 				VGA_green    : out std_logic_vector(3 downto 0);   -- green output
 				VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
-				
+
 				sw           : in  std_logic_vector(15 downto 0);
                 led          : out std_logic_vector(15 downto 0);
-                   
+
                 RGB1_Red     : out std_logic;
                 RGB1_Green   : out std_logic;
                 RGB1_Blue    : out std_logic;
                 RGB2_Red     : out std_logic;
                 RGB2_Green   : out std_logic;
                 RGB2_Blue    : out std_logic;
-                   
+
+                OLED_PMOD_CS      	: out STD_LOGIC;
+          			OLED_PMOD_MOSI    	: out STD_LOGIC;
+           			OLED_PMOD_SCK     	: out STD_LOGIC;
+          			OLED_PMOD_DC      	: out STD_LOGIC;
+           			OLED_PMOD_RES     	: out STD_LOGIC;
+          			OLED_PMOD_VCCEN   	: out STD_LOGIC;
+         			  OLED_PMOD_EN      	: out STD_LOGIC;
+
+
                 seg          : out std_logic_vector(6 downto 0);
                 an           : out std_logic_vector(7 downto 0);
-                   
+
                 btnCpuReset  : in std_logic;
                 btnC         : in std_logic;
                 btnU         : in std_logic;
@@ -157,7 +171,7 @@ architecture logic of plasma is
    signal enable_uart_write : std_logic;
    signal enable_eth        : std_logic;
    signal enable_local_mem  : std_logic;
-   signal enable_buttons    : std_logic;	
+   signal enable_buttons    : std_logic;
    signal enable_vga        : std_logic;
    signal enable_vga_read   : std_logic;
    signal enable_vga_write  : std_logic;
@@ -165,6 +179,10 @@ architecture logic of plasma is
    signal ctrl_SL_reset     : std_logic;
    signal ctrl_SL_valid	    : std_logic;
    signal ctrl_SL_output    : std_logic_vector(31 downto 0);
+
+   signal oled_reset        : std_logic;
+   signal oled_valid	      : std_logic;
+   signal oled_output	      : std_logic_vector( 31 downto 0 ):= "00000000000000000000000000000000";
 
    signal buttons_values    : std_logic_vector(31 downto 0);
    signal buttons_change    : std_logic_vector(31 downto 0);
@@ -193,18 +211,18 @@ architecture logic of plasma is
    signal dma_data_read     : std_logic_vector(31 downto 0);
    signal dma_start         : std_logic;
 
-   signal cop_1_reset       : std_logic;
-   signal cop_1_valid       : std_logic;
-   signal cop_1_output      : std_logic_vector(31 downto 0);
-   signal cop_2_reset       : std_logic;
-   signal cop_2_valid       : std_logic;
-   signal cop_2_output      : std_logic_vector(31 downto 0);
-   signal cop_3_reset       : std_logic;
-   signal cop_3_valid       : std_logic;
-   signal cop_3_output      : std_logic_vector(31 downto 0);
-   signal cop_4_reset       : std_logic;
-   signal cop_4_valid       : std_logic;
-   signal cop_4_output      : std_logic_vector(31 downto 0);
+   --signal cop_1_reset       : std_logic;
+   --signal cop_1_valid       : std_logic;
+   --signal cop_1_output      : std_logic_vector(31 downto 0);
+   --signal cop_2_reset       : std_logic;
+   --signal cop_2_valid       : std_logic;
+   --signal cop_2_output      : std_logic_vector(31 downto 0);
+   --signal cop_3_reset       : std_logic;
+   --signal cop_3_valid       : std_logic;
+   --signal cop_3_output      : std_logic_vector(31 downto 0);
+   --signal cop_4_reset       : std_logic;
+   --signal cop_4_valid       : std_logic;
+   --signal cop_4_output      : std_logic_vector(31 downto 0);
 
    signal cache_access      : std_logic;
    signal cache_checking    : std_logic;
@@ -220,7 +238,7 @@ architecture logic of plasma is
            we_select : in   STD_LOGIC_VECTOR (3 downto 0);
            data_out  : out  STD_LOGIC_VECTOR (31 downto 0));
 	end COMPONENT;
-	
+
 	component vga_ctrl is
       port(
          clock           : in  std_logic;
@@ -256,6 +274,34 @@ architecture logic of plasma is
 		);
 	end component;
 
+
+  component PmodOLEDrgb_charmap is
+      Generic (CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+               PARAM_BUFF  : boolean := False;            -- if True, no need to hold inputs while module busy
+               LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
+      Port (clk          : in  STD_LOGIC;
+            reset        : in  STD_LOGIC;
+
+            char_write   : in  STD_LOGIC;
+            char_col     : in  STD_LOGIC_VECTOR(3 downto 0);
+            char_row     : in  STD_LOGIC_VECTOR(2 downto 0);
+            char         : in  STD_LOGIC_VECTOR(7 downto 0);
+            ready        : out STD_LOGIC;
+            foregnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"FF";
+            backgnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"00";
+            scroll_up    : in  STD_LOGIC := '0';
+            row_clear    : in  STD_LOGIC := '0';
+            screen_clear : in  STD_LOGIC := '0';
+
+            PMOD_CS      : out STD_LOGIC;
+            PMOD_MOSI    : out STD_LOGIC;
+            PMOD_SCK     : out STD_LOGIC;
+            PMOD_DC      : out STD_LOGIC;
+            PMOD_RES     : out STD_LOGIC;
+            PMOD_VCCEN   : out STD_LOGIC;
+            PMOD_EN      : out STD_LOGIC);
+  end component;
+
 begin  --architecture
 
 
@@ -265,13 +311,13 @@ begin  --architecture
    --RGB2_Red <= btnR;
    --RGB2_Green <= btnL;
    --RGB2_Blue <= btnC;
-   
+
    --led <= sw;
-   
+
    seg <= "1011010";
    an <= sw(7 downto 0);
-   
-      
+
+
    write_enable <= '1' when cpu_byte_we /= "0000" else '0';
    mem_busy     <= eth_pause;-- or mem_pause_in;
    cache_hit    <= cache_checking and not cache_miss;
@@ -280,7 +326,7 @@ begin  --architecture
 --                   or (cpu_address(31) and not cache_hit and mem_busy);  --DDR or flash
                    or (eth_pause);  -- DMA ENGINE FREEZE ALL (BLG)
    irq_status   <= gpioA_in(31) & not gpioA_in(31) &
-                        irq_eth_send & irq_eth_rec & 
+                        irq_eth_send & irq_eth_rec &
                         counter_reg(18) & not counter_reg(18) &
                         not uart_write_busy & uart_data_avail;
    irq          <= '1' when (irq_status and irq_mask_reg) /= ZERO(7 downto 0) else '0';
@@ -307,20 +353,23 @@ begin  --architecture
 	fifo_1_read_en  <= '1' when (cpu_address = x"30000080") AND (cpu_pause    = '0')                         else '0';
    fifo_1_write_en <= '1' when (cpu_address = x"30000090") AND (cpu_pause    = '0') AND(write_enable = '1') else '0';
 
-   cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   --cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+
+   oled_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   oled_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
    ctrl_SL_reset <= '1' when (cpu_address = x"400000C0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   ctrl_SL_valid <= '1' when (cpu_address = x"400000C4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   ctrl_SL_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
    enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
 
@@ -344,7 +393,7 @@ begin  --architecture
 --	enable_local_mem <= '1' when (ram_address(31 downto 28) = "0001") else '0';
 
 
-   local_memory: memory_64k 
+   local_memory: memory_64k
       port map (
          clk        => clk,
 			addr_in	  => ram_address, --cpu_data_r,
@@ -357,13 +406,13 @@ begin  --architecture
 	--
 	--
 	--
-   u1_cpu: mlite_cpu 
+   u1_cpu: mlite_cpu
       generic map (memory_type => memory_type)
       PORT MAP (
          clk          => clk,
          reset_in     => reset,
          intr_in      => irq,
- 
+
          address_next => address_next,             --before rising_edge(clk)
          byte_we_next => byte_we_next,
 
@@ -382,14 +431,14 @@ begin  --architecture
       cache_checking <= '0';
       cache_miss     <= '0';
    end generate;
-   
+
 	--
 	--
 	--
    opt_cache2: if use_cache = '1' generate
    --Control 4KB unified cache that uses the upper 4KB of the 8KB
    --internal RAM.  Only lowest 2MB of DDR is cached.
-   u_cache: cache 
+   u_cache: cache
       generic map (memory_type => memory_type)
       PORT MAP (
          clk            => clk,
@@ -421,11 +470,11 @@ begin  --architecture
 		fifo_1_valid, fifo_2_valid, fifo_1_compteur, fifo_2_compteur, fifo_1_out_data)
    begin
       case cpu_address(30 downto 28) is
-		
+
 			-- ON LIT LES DONNEES DE LA MEMOIRE INTERNE
       	when "000" =>         --internal ROM
          	cpu_data_r <= ram_data_r;
-				
+
 			-- ON LIT LES DONNEES DE LA MEMOIRE EXTERNE (LOCAL RAM)
       	when "001" =>         --external (local) RAM
          	--if cache_checking = '1' then
@@ -434,7 +483,7 @@ begin  --architecture
          	--cpu_data_r <= data_read; --DDR
          	--end if;
 				cpu_data_r <= ram_data_lm;
-      
+
 			-- ON LIT LES DONNEES DES PERIPHERIQUES MISC.
 	when "010" =>         --misc
          	case cpu_address(8 downto 4) is
@@ -483,12 +532,13 @@ begin  --architecture
 		case cpu_address is
 			when x"40000100" => cpu_data_r <= buttons_values;
 			when x"40000104" => cpu_data_r <= buttons_change;
-			when others => 
+			when others =>
 			 	case cpu_address(7 downto 0) is
-							when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
-							when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
-							when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
-							when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
+							--when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
+							--when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
+							--when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
+							--when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
+              when "10010100"  => cpu_data_r <= oled_output;    -- CONTROLLER SWITCH LED (OUTPUT)
 							when "11000100"  => cpu_data_r <= ctrl_SL_output;    -- CONTROLLER SWITCH LED (OUTPUT)
 							when others =>	 cpu_data_r <= x"FFFFFFFF";
 			 	end case;
@@ -569,7 +619,7 @@ begin  --architecture
 	-- RAM DATA CONTROLLER
 	--
    --ram_boot_enable <= '1' WHEN (ram_enable = '1') AND eth_pause = '0' ELSE '0';
-   u2_boot: ram 
+   u2_boot: ram
       generic map (memory_type => memory_type)
       port map (
          clk               => clk,
@@ -642,7 +692,7 @@ begin  --architecture
 --		VGA_green => VGA_green,
 --		VGA_blue => VGA_blue
 --	);
-	
+
 	--
 	-- ETHERNET CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)
 	--
@@ -657,7 +707,7 @@ begin  --architecture
 --   end generate;
 
 --   dma_gen2: if ethernet = '1' generate
---   u4_eth: eth_dma 
+--   u4_eth: eth_dma
 --      port map(
 --         clk         => clk,
 --         reset       => reset,
@@ -752,7 +802,7 @@ begin  --architecture
 		pause_out   => eth_pause
 	);
 
-	
+
 	------------------------------------------------------------------------------------------------------
 	--
 	--
@@ -784,23 +834,49 @@ begin  --architecture
 --		INPUT_1_valid  => cop_3_valid,
 --		OUTPUT_1       => cop_3_output
 --	);
-	
+
 -- Controller Switchs/Leds
 	plasma_ctrl_SL: ctrl_SL port map (
-		clock			=> clk,
-		reset			=> ctrl_SL_reset,
-		INPUT_1			=> cpu_data_w,
-		INPUT_1_valid	=> ctrl_SL_valid,
-		OUTPUT_1		=> ctrl_SL_output,
-		SW				=> sw,
-		LED				=> led,
-		RGB1_Red		=> RGB1_Red,
-		RGB2_Red		=> RGB2_Red,
-		RGB1_Green		=> RGB1_Green,
-		RGB2_Green		=> RGB2_Green,
-		RGB1_Blue		=> RGB1_Blue,
-		RGB2_Blue		=> RGB2_Blue
+		clock			     => clk,
+		reset			     => ctrl_SL_reset,
+		INPUT_1		     => cpu_data_w,
+		INPUT_1_valid	 => ctrl_SL_valid,
+		OUTPUT_1		   => ctrl_SL_output,
+		SW				     => sw,
+		LED				     => led,
+		RGB1_Red		   => RGB1_Red,
+		RGB2_Red		   => RGB2_Red,
+		RGB1_Green	   => RGB1_Green,
+		RGB2_Green		 => RGB2_Green,
+		RGB1_Blue		   => RGB1_Blue,
+		RGB2_Blue		   => RGB2_Blue
 	);
+
+
+  -- OLED
+  	plasma_oled: PmodOLEDrgb_charmap
+    Generic map(CLK_FREQ_HZ => CLK_FREQ_HZ,
+                PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+                LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+
+     port map (
+  		clk          => clk,
+      reset        => oled_reset,
+
+      char_write   => oled_valid,
+      char_col     => cpu_data_w( 19 downto 16 ),
+      char_row     => cpu_data_w( 10 downto 8 ),
+      char         => cpu_data_w( 7 downto 0 ),
+      ready        => oled_output(0),
+
+      PMOD_CS      => OLED_PMOD_CS,
+      PMOD_MOSI    => OLED_PMOD_MOSI,
+      PMOD_SCK     => OLED_PMOD_SCK,
+      PMOD_DC      => OLED_PMOD_DC,
+      PMOD_RES     => OLED_PMOD_RES,
+      PMOD_VCCEN   => OLED_PMOD_VCCEN,
+      PMOD_EN      => OLED_PMOD_EN
+  	);
 
 --	u5d_coproc: entity WORK.coproc_3 port map(-- atention 2x coproc 3
 --         clock          => clk,
@@ -826,4 +902,3 @@ begin  --architecture
 
 
 end; --architecture logic
-

@@ -18,7 +18,8 @@
 #MY_PROJECT=mandelbrot
 #MY_PROJECT=boot_loader
 #MY_PROJECT=hello
-MY_PROJECT=switch_led
+#MY_PROJECT=switch_led
+MY_PROJECT=rgb_oled
 
 SRC_DIR=Sources
 INC_DIR=Includes

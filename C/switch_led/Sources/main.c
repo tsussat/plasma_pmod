@@ -13,9 +13,9 @@ int sw, value;
 
 	MemoryWrite(CTRL_SL_RST, 0); // reset the sw/led controler
 	while (1) {
-		sw = MemoryRead(CTRL_SL_RW); // read the state of the switches
+		sw = MemoryRead(CTRL_SL_READ); // read the state of the switches
 		value =  (sw<<16) | sw ; // MSByte drives the 2 RBG Led (6 bit), LSByte drives the led
 		my_printf("value =", value); // display the value on the UART
-		MemoryWrite(CTRL_SL_RW, value);
+		MemoryWrite(CTRL_SL_WRITE, value);
 	}
 }
