@@ -17,12 +17,12 @@ while(1) {
 
 	//oled = MemoryRead(OLED_READ); // read the state of the oled
 	//my_printf("ready =", oled); // if ready=1, the oled is ready to receive a char
-	while( !MemoryRead(OLED_READ) ) {}
-		MemoryWrite(OLED_WRITE, 0x00000041);
+	while( !MemoryRead(OLED_RW) ) {}
+		MemoryWrite(OLED_RW, 0x00000041);
 
 	//oled = MemoryRead(OLED_READ); // read the state of the oled
 	//my_printf("ready =", oled); // if ready=1, the oled is ready to receive a char
-	while( !MemoryRead(OLED_READ) ) {}
-		MemoryWrite(OLED_WRITE, 0x00020241);
+	while( !MemoryRead(OLED_RW) ) {}
+		MemoryWrite(OLED_RW, 0x00020241);
 }
 }

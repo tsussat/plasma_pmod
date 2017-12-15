@@ -211,18 +211,18 @@ architecture logic of plasma is
    signal dma_data_read     : std_logic_vector(31 downto 0);
    signal dma_start         : std_logic;
 
-   --signal cop_1_reset       : std_logic;
-   --signal cop_1_valid       : std_logic;
-   --signal cop_1_output      : std_logic_vector(31 downto 0);
-   --signal cop_2_reset       : std_logic;
-   --signal cop_2_valid       : std_logic;
-   --signal cop_2_output      : std_logic_vector(31 downto 0);
-   --signal cop_3_reset       : std_logic;
-   --signal cop_3_valid       : std_logic;
-   --signal cop_3_output      : std_logic_vector(31 downto 0);
-   --signal cop_4_reset       : std_logic;
-   --signal cop_4_valid       : std_logic;
-   --signal cop_4_output      : std_logic_vector(31 downto 0);
+   signal cop_1_reset       : std_logic;
+   signal cop_1_valid       : std_logic;
+   signal cop_1_output      : std_logic_vector(31 downto 0);
+   signal cop_2_reset       : std_logic;
+   signal cop_2_valid       : std_logic;
+   signal cop_2_output      : std_logic_vector(31 downto 0);
+   signal cop_3_reset       : std_logic;
+   signal cop_3_valid       : std_logic;
+   signal cop_3_output      : std_logic_vector(31 downto 0);
+   signal cop_4_reset       : std_logic;
+   signal cop_4_valid       : std_logic;
+   signal cop_4_output      : std_logic_vector(31 downto 0);
 
    signal cache_access      : std_logic;
    signal cache_checking    : std_logic;
@@ -353,23 +353,23 @@ begin  --architecture
 	fifo_1_read_en  <= '1' when (cpu_address = x"30000080") AND (cpu_pause    = '0')                         else '0';
    fifo_1_write_en <= '1' when (cpu_address = x"30000090") AND (cpu_pause    = '0') AND(write_enable = '1') else '0';
 
-   --cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   --cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   --cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   --cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   --cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   --cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   --cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   --cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   oled_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   oled_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   oled_reset <= '1' when (cpu_address = x"400000A0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   oled_valid <= '1' when (cpu_address = x"400000A4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
    ctrl_SL_reset <= '1' when (cpu_address = x"400000C0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   ctrl_SL_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+   ctrl_SL_valid <= '1' when (cpu_address = x"400000C4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
    enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
 
@@ -396,7 +396,7 @@ begin  --architecture
    local_memory: memory_64k
       port map (
          clk        => clk,
-			addr_in	  => ram_address, --cpu_data_r,
+			   addr_in	  => ram_address, --cpu_data_r,
          data_in    => ram_data_w,
          enable     => enable_local_mem,
          we_select  => ram_byte_we,
@@ -534,11 +534,11 @@ begin  --architecture
 			when x"40000104" => cpu_data_r <= buttons_change;
 			when others =>
 			 	case cpu_address(7 downto 0) is
-							--when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
-							--when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
-							--when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
-							--when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
-              when "10010100"  => cpu_data_r <= oled_output;    -- CONTROLLER SWITCH LED (OUTPUT)
+							when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
+							when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
+							when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
+							when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
+              when "10100100"  => cpu_data_r <= oled_output;    -- CONTROLLER SWITCH LED (OUTPUT)
 							when "11000100"  => cpu_data_r <= ctrl_SL_output;    -- CONTROLLER SWITCH LED (OUTPUT)
 							when others =>	 cpu_data_r <= x"FFFFFFFF";
 			 	end case;
