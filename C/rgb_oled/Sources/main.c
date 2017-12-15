@@ -7,22 +7,42 @@
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
 
+
+void printCar( char row, char col, char car) {
+	int buff = 0x00000000;
+
+	buff = col;
+	buff = (buff << 8) | row;
+	buff = (buff << 8) | car;
+
+	while( !MemoryRead(OLED_RW) ) {}
+		MemoryWrite(OLED_RW, buff);
+}
+
+
+
+
+
 int main(int argc, char ** argv) {
 
-int oled, i;
+	int oled, i;
+	char row = 0x00;
+	char col = 0x00;
+	char car = 0x41;
 
-	MemoryWrite(OLED_RST, 1); // reset the oled_rgb
+		MemoryWrite(OLED_RST, 1); // reset the oled_rgb
 
-while(1) {
+		while( !MemoryRead(OLED_RW) ) {}		//Screen Clear (Black Background by defaulf)
+			MemoryWrite(OLED_RW, 0x01000000);
 
-	//oled = MemoryRead(OLED_READ); // read the state of the oled
-	//my_printf("ready =", oled); // if ready=1, the oled is ready to receive a char
-	while( !MemoryRead(OLED_RW) ) {}
-		MemoryWrite(OLED_RW, 0x00000041);
 
-	//oled = MemoryRead(OLED_READ); // read the state of the oled
-	//my_printf("ready =", oled); // if ready=1, the oled is ready to receive a char
-	while( !MemoryRead(OLED_RW) ) {}
-		MemoryWrite(OLED_RW, 0x00020241);
-}
+		for( row = 0; row < 2; row++ ) {
+			for( col = 0; col < 16; col++ ) {
+				printCar( row, col, car);
+				car++;
+			}
+		}
+
+	while(1) {
+	}
 }

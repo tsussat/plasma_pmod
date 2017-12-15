@@ -291,7 +291,7 @@ architecture logic of plasma is
             backgnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"00";
             scroll_up    : in  STD_LOGIC := '0';
             row_clear    : in  STD_LOGIC := '0';
-            screen_clear : in  STD_LOGIC := '0';
+            screen_clear : in  STD_LOGIC;
 
             PMOD_CS      : out STD_LOGIC;
             PMOD_MOSI    : out STD_LOGIC;
@@ -868,6 +868,10 @@ begin  --architecture
       char_row     => cpu_data_w( 10 downto 8 ),
       char         => cpu_data_w( 7 downto 0 ),
       ready        => oled_output(0),
+
+      --scroll_up    => cpu_data_w(26),
+      --row_clear    => cpu_data_w(25),
+      screen_clear => cpu_data_w(24),
 
       PMOD_CS      => OLED_PMOD_CS,
       PMOD_MOSI    => OLED_PMOD_MOSI,
