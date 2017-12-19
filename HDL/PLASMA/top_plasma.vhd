@@ -16,7 +16,11 @@ use IEEE.STD_LOGIC_1164.ALL;
 library unisim;
 use unisim.VComponents.all;
 
-entity top_plasma is port(
+entity top_plasma is
+   generic(ethernet    : std_logic  := '0';
+           eUart       : std_logic  := '1';
+           use_cache   : std_logic  := '0');
+    port(
 	clk100: in std_logic;
 	--rst: in std_logic;
 	--led: out std_logic_vector(7 downto 0);
@@ -107,9 +111,9 @@ end process;
 	GENERIC MAP (
 		memory_type => "XILINX_16X",
 		log_file    => "UNUSED",
-      ethernet    => '0',
-		eUart       => '1',
-      use_cache   => '0'
+		ethernet    => ethernet,
+		eUart       => eUart,
+		use_cache   => use_cache
 	)
 	PORT MAP(
 		clk           => clk50,

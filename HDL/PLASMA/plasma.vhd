@@ -74,9 +74,9 @@ use work.mlite_pack.all;
 entity plasma is
    generic(memory_type : string := "XILINX_16X"; --"DUAL_PORT_" "ALTERA_LPM";
            log_file    : string := "UNUSED";
-           ethernet    : std_logic  := '0';
-           eUart       : std_logic  := '0';
-           use_cache   : std_logic  := '0';
+           ethernet    : std_logic;
+           eUart       : std_logic;
+           use_cache   : std_logic;
            CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
            LEFT_SIDE   : boolean := False );
    port(clk          : in std_logic;

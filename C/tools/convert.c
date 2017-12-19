@@ -123,15 +123,22 @@ int main(int argc, char *argv[])
    Elf32_Phdr  *elfProgram;
    ELF_RegInfo *elfRegInfo;
    Elf32_Shdr  *elfSection;
-   (void)argc; 
-   (void)argv;
    (void)stack_pointer;
 
-   printf("test.axf -> code.txt & test.bin\n");
-   infile = fopen("test.axf", "rb");
+   if (argc < 4) {
+     fprintf(stderr, "Usage: convert_bin [axf input] [bin output] [txt output]\n");
+     return 1;
+   }
+
+   char *input = argv[1];
+   char *output_bin = argv[2];
+   char *output_txt = argv[3];
+
+   printf("%s -> %s/%s\n", input, output_bin, output_txt);
+   infile = fopen(input, "rb");
    if(infile == NULL)
    {
-      printf("Can't open test.axf");
+      printf("Can't open %s", input);
       return 0;
    }
    buf = (uint8*)malloc(BUF_SIZE);
@@ -277,19 +284,20 @@ int main(int argc, char *argv[])
 #endif
 
    /*write out test.bin */
-   outfile = fopen("test.bin", "wb");
+   outfile = fopen(output_bin, "wb");
    fwrite(code, length, 1, outfile);
    fclose(outfile);
 
    /*write out code.txt */
-   txtfile = fopen("code.txt",     "w");
-   binfile = fopen("code_bin.txt", "w");
+//   txtfile = fopen(output_txt,     "w");
+   binfile = fopen(output_txt, "w");
    for(i = 0; i <= length; i += 4)
    {
       d = ntohl(*(uint32 *)(code + i));
-      fprintf(txtfile, "%8.8x\n", d);
+//      fprintf(txtfile, "%8.8x\n", d);
       fprintf_bin(binfile, d);
    }
+
 
 	if( elfHeader->e_entry != 0x10000000 )
 	{
@@ -305,17 +313,17 @@ int main(int argc, char *argv[])
    	for(i = 0; i < ll; i += 1)
    	{
 			int fValue = ((rand()%65536) << 16) | (rand()%65536);	// WE GENERATE RANDOM VALUE TO AVOID XILINX ISE
-   	   fprintf(txtfile, "%8.8x\n", fValue);                  // TO REMOVE RAMs AS THEIR ARE BLANKS AND EQUALS !
+  // 	   fprintf(txtfile, "%8.8x\n", fValue);                  // TO REMOVE RAMs AS THEIR ARE BLANKS AND EQUALS !
    	}
 
 		while( length != (65536) ){
-      	fprintf_bin(binfile, 0);
+			fprintf_bin(binfile, 0);
 			length += 4;
 		}
 
 	}
 
-   fclose(txtfile);
+//   fclose(txtfile);
    fclose(binfile);
    free(buf);
    printf("length = %d = 0x%x\n", length, length);

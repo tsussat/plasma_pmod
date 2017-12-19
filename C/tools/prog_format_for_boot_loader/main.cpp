@@ -72,6 +72,7 @@ void send_char(unsigned char c, int fileDescriptor, bool wait = false)
 int main(int argc, char ** argv) {
 
 	char *filename = argv[1];
+	char *serial = argv[2];
 	FILE *infile   = fopen(filename , "rb");
 	if(infile == NULL)
 	{
@@ -82,10 +83,12 @@ int main(int argc, char ** argv) {
 	uint8_t *buf = new unsigned char[BUF_SIZE];
 	int size   = (int)fread(buf, 1, BUF_SIZE, infile);
 	fclose(infile);
-
-
     int fileDescriptor;
-	fileDescriptor = open("/dev/ttyUSB1", O_RDWR | O_NOCTTY );
+
+	if (argc < 3 || filename == NULL || serial == NULL)
+		return 1;
+
+	fileDescriptor = open(serial, O_RDWR | O_NOCTTY );
        if(fileDescriptor == -1)
        {
         	printf("Impossible d'ouvrir ttyUSB1 !\n");
