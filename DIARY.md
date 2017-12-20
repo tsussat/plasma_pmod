@@ -5,7 +5,18 @@ Etudiants : Henri Gouttard, Igor Papandinas, Paul Kociallowski
 
 Ce fichier permet de lister les tâches effectuées lors des séances des projets.
 
+# Compte Rendu de la séance du 19/12
 
+Paul:
+* J'ai travaillé sur la réécriture du Makefile, que j'ai pu terminer et tester avec le projet hello.
+* Certains bugs ont été particulièrement longs à debugger, en particulier de découvrir que l'ordre des objets à passer au linker (ld) est important : il faut placer le code assembleur en premier.
+* J'ai aussi rajouté la prise en charge des generic pour la configuration de la synthèse (avec le module UART qui était déjà paramétré).
+* Globalement, plusieurs options peuvent être configurées avec des variables CONFIG_ qui peuvent être passées en argument à make.
+* Pour la suite, je vais me concentrer sur les éléments suivants :
+  * Ajouter plus d'éléments configurables par des generic
+  * Tester la simulation du Plasma avec le nouveau build system
+  * Tester chacun des projets pris en charge
+  * Aboutir à une implémentation fonctionnelle pour le bloc I2C
 
 # Compte Rendu de la séance du 27/10
 
