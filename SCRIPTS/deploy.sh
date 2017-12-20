@@ -15,15 +15,16 @@ GATEWAY="ssh.enseirb-matmeca.fr"
 USER="paukocialkowsk"
 PORT=1234
 PROJECT="projet-avance-se"
-BITSTREAM="Plasma/SYNTHESIS/top_plasma.bit"
-BINARY="Plasma/test.bin"
-SRC="$root/"
+BITSTREAM="Plasma/BIN/plasma.bit"
+PROJECT="hello"
+BINARY="Plasma/BIN/$PROJECT.bin"
+SRC="$HOME/$PROJECT/Plasma"
 DST="$USER@$GATEWAY:$PROJECT"
 HOST="$1"
 
 if [ -z "$HOST" ]
 then
-	HOST="lsd"
+	HOST="regiotonum" # cannabis, lsd, darlingtonia
 fi
 
 test=$( ssh-add -l | grep "$KEY" || true )
@@ -58,33 +59,39 @@ echo -e "Setup \e[1;34mgateway\e[0m on port \e[1;33m$PORT\e[0m"
 screen -S plasma -d -m ssh -L $PORT:$HOST:22 "$GATEWAY" && echo "Attached via screen" || exit 1
 sleep 5
 
+echo -e "Run \e[1;34mclean\e[0m"
+
+$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma clean"
+
 if [ -n "$ENABLE_SIMULATION" ]
 then
 	echo -e "Run \e[1;34msimulation\e[0m"
 
-	$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma"
+	$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma simulation"
 fi
 
 if [ -n "$ENABLE_BITSTREAM" ]
 then
-	echo -e "Run \e[1;34mfpga\e[0m"
+	echo -e "Run \e[1;34mplasma\e[0m"
 
-	$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma fpga MY_PROJECT=boot_loader"
+	$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma plasma"
 
 	echo -e "Copy \e[1;34mbitstream\e[0m"
 
-	$SCP "$DST/$BITSTREAM" "$SRC/$BITSTREAM"
-	cp "$SRC/$BITSTREAM" $( basename "$SRC/$BITSTREAM" )
+	$SCP "$DST/$BITSTREAM" $( basename "$BITSTREAM" )
 fi
 
-echo -e "Run \e[1;34msend\e[0m"
+echo -e "Run \e[1;34mproject\e[0m"
 
-$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma send MY_PROJECT=hello"
+$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma project CONFIG_PROJECT=$PROJECT"
 
-echo -e "Copy \e[1;34mbinary\e[0m"
+echo -e "Copy \e[1;34mproject\e[0m"
 
-$SCP "$DST/$BINARY" "$SRC/$BINARY"
-cp "$SRC/$BINARY" $( basename "$SRC/$BINARY" )
+$SCP "$DST/$BINARY" $( basename "$BINARY" )
+
+echo -e "Run \e[1;34mclean\e[0m"
+
+$SSH $SSH_OPTIONS -p $PORT "$USER@localhost" "cd projet-avance-se && source config.sh && make -C Plasma clean"
 
 echo -e "Close \e[1;34mgateway\e[0m on port \e[1;33m$PORT\e[0m"
 

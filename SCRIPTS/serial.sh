@@ -1,3 +1,5 @@
 #!/bin/sh
 
-sudo picocom /dev/ttyUSB1 -b 115200
+SERIAL="/dev/ttyUSB1"
+
+sudo picocom "$SERIAL" -b 115200

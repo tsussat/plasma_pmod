@@ -5,5 +5,5 @@ PATH="$PATH:/opt/modelsim/modeltech/bin/:/opt/mentor/modelsim_se/10.3d/modeltech
 PATH="$PATH:/opt/xilinx/vivado/2015.2/Vivado/2015.2/bin"
 export PATH
 
-LM_LICENSE_FILE=1700@narrhavas:30000@hurin.cnfm.fr:1700@johnny.enseirb.fr:1717@f.ims.bordeaux:2100@johnny.enseirb.fr
+LM_LICENSE_FILE=2100@johnny
 export LM_LICENSE_FILE
