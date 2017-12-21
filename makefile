@@ -14,12 +14,12 @@
 #MY_PROJECT=ray_tracer_v3
 #MY_PROJECT=filtre
 #MY_PROJECT=filtre_no_fifo
-#MY_PROJECT=tuto_plasma
+MY_PROJECT=scale
 #MY_PROJECT=mandelbrot
 #MY_PROJECT=boot_loader
 #MY_PROJECT=hello
 #MY_PROJECT=switch_led
-MY_PROJECT=rgb_oled
+#MY_PROJECT=rgb_oled
 
 SRC_DIR=Sources
 INC_DIR=Includes
@@ -31,7 +31,6 @@ SYN_DIR=./SYNTHESIS
 
 
 VHDL_PLASMA_DIR = $(VHDL_DIR)/PLASMA
-VHDL_CUSTOM_DIR = $(VHDL_DIR)/custom/$(MY_PROJECT)
 
 SHARED_FILES = \
 	$(C_DIR)/$(SHARED_DIR)/plasmaSoPCDesign.h\
@@ -96,7 +95,6 @@ vhdl:
 	ls HDL/PLASMA/*.vhd > tmp.txt
 	sed 's/^/vhdl work ..\//' tmp.txt > $(SIM_DIR)/$(SIM_TOP).prj
 	rm tmp.txt
-	cp $(VHDL_CUSTOM_DIR)/*.vhd $(VHDL_PLASMA_DIR)
 	xelab -prj $(SIM_DIR)/$(SIM_TOP).prj -debug typical $(SIM_TOP) -s $(SIM_TOP) --nolog
 
 simu:

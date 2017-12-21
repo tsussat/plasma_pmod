@@ -16,3 +16,4 @@ pcie_in.txt
 pcie_out.txt
 SYNTHESIS/top_plasma.bit
 test.bin
+SYNTHESIS/*.prj
