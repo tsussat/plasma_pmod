@@ -1,4 +1,3 @@
-
 ---------------------------------------------------------------------
 -- TITLE: Arithmetic Logic Unit
 -- AUTHOR: Steve Rhoads (rhoadss@yahoo.com)
@@ -15,7 +14,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.mlite_pack.all;
 
-entity function_3 is
+entity function_13 is
    port(
 		INPUT_1  : in  std_logic_vector(31 downto 0);
 		INPUT_2  : in  std_logic_vector(31 downto 0);
@@ -23,24 +22,20 @@ entity function_3 is
 	);
 end; --comb_alu_1
 
-architecture logic of function_3 is
-
-constant Nf : INTEGER := 18;
-
+architecture logic of function_13 is
 begin
 	
 	-------------------------------------------------------------------------
 	computation : process (INPUT_1, INPUT_2)
-		variable rTemp1  : SIGNED(63 downto 0);
-		variable rTemp2  : SIGNED(63 downto 0);
-		variable rTemp3  : SIGNED(63 downto 0);
+		variable rTemp1  : UNSIGNED(31 downto 0);
+		variable rTemp2  : UNSIGNED(31 downto 0);
+		variable rTemp3  : UNSIGNED(31 downto 0);
 	begin
-		rTemp1 := (signed(INPUT_1) * signed(INPUT_1));
-		rTemp2 := (signed(INPUT_2) * signed(INPUT_2));
-		rTemp3 := rTemp1+rTemp2;
-		OUTPUT_1 <= std_logic_vector(rTemp3(32+(Nf-1) downto Nf));  --x1²+y1²
+		rTemp1 := UNSIGNED( INPUT_1 );
+		rTemp2 := UNSIGNED( INPUT_2 );
+		rTemp3 := rTemp1 + rTemp2 + TO_UNSIGNED(13, 32);
+		OUTPUT_1 <= STD_LOGIC_VECTOR( rTemp3 );
 	end process;
-	
 	-------------------------------------------------------------------------
 
 end; --architecture logic

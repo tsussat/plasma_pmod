@@ -45,7 +45,7 @@ begin
 		diff2 := data2 - mini; -- 8
 		diff3 := data3 - mini; -- 8
 		diff4 := data4 - mini; -- 8
-		mult1 := diff1 * beta; -- 24  
+		mult1 := diff1 * beta; -- 24
 		mult2 := diff2 * beta; -- 24
 		mult3 := diff3 * beta; -- 24
 		mult4 := diff4 * beta; -- 24

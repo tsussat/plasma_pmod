@@ -1,20 +1,55 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
+
 
 #include "../../shared/plasmaCoprocessors.h"
 #include "../../shared/plasmaIsaCustom.h"
 #include "../../shared/plasmaMisc.h"
 #include "../../shared/plasmaSoPCDesign.h"
 #include "../../shared/plasmaMyPrint.h"
-//#include "../../shared/plasmaFifoInOut.h"
+#include "../../shared/plasma.h"
 
 //#define COLOR
 
 #define Nf 18
 #define Nr 12
 
+#define RIGHT_BUTTON  0x00000010
+#define LEFT_BUTTON   0x00000008
+#define DOWN_BUTTON   0x00000004
+#define UP_BUTTON     0x00000002
+#define CENTER_BUTTON 0x00000001
+#define OLED_RW       0x400000A4
+#define OLED_RST      0x400000A0
+
+
 int Convergence(int x_C, int y_C, int Imax) {
+   
+  long long int x = 0;
+  long long int y = 0;
+  int x2 = (x*x) >> Nf;
+  int y2 = (y*y) >> Nf;
+  int iter = 0;
+  int x_new;
+  int quatre = 4<<Nf;
+
+  while( ((x2 + y2) <= quatre) && ( iter < Imax) )
+  {
+    x_new = x2 - y2 + x_C;
+    y = 2*((x*y)>>Nf) + y_C;
+    x = x_new;
+    x2 = (x*x)>>Nf;
+    y2 = (y*y)>>Nf;
+    iter++;
+  }
+
+  return iter;
+}
+
+int Convergence_opt(int x_C, int y_C, int Imax) {
+
     long long int x = 0;
     long long int y = 0;
     int x2 = (x * x) >> Nf;
@@ -24,109 +59,184 @@ int Convergence(int x_C, int y_C, int Imax) {
     int quatre = 4 << Nf;
     int mod2 = x2 + y2;
 
-    /*while( (mod2 <= quatre) && ( iter < Imax) )
+    while( (mod2 <= quatre) && ( iter < Imax) )
     {
-
-      x_new = isa_custom_2(x, y) + x_C;
-
-      y = isa_custom_1(x,y) + y_C;
-
+      x_new = isa_custom_7(x, y) + x_C;
+      y = isa_custom_6(x,y) + y_C;
       x = x_new;
-
-      mod2 = isa_custom_3(x,y);
+      mod2 = isa_custom_8(x,y);
       iter++;
-    }*/
-
-    while ((mod2 <= quatre) && (iter < Imax)) {
-        x_new = x2 - y2 + x_C;
-        y = 2 * ((x * y) >> Nf) + y_C;
-        x = x_new;
-        x2 = (x * x) >> Nf;
-        y2 = (y * y) >> Nf;
-        mod2 = x2 + y2;
-        iter++;
     }
-
 
     return iter;
 }
 
-int main(int argc, char **argv) {
+void generate_mandelbrot(int H, int W, int Imax, int FS, int x_A, int y_A, int x_B, int y_B)
+{
 
+	int x_C;
+	int y_C;
 
+	int dx = (x_B - x_A); // A(Ni+1,Nf)
+	int dy = (y_B - y_A); // U(Ni+1,Nf)
+	int dx64 = dx;
+	int dy64 = dy;
 
-    //coproc_reset(COPROC_4_RST);
-    //coproc_reset(COPROC_1_RST)
-    puts("Mandelbrot\n");
+	dx64 = ((dx64<<Nr) / W) >> Nr; // A(Ni+1,Nf+12)
+	dy64 = ((dy64<<Nr) / H) >> Nr; // A(Ni+1,Nf+12)
+	dx = dx64;
+	dy = dy64;
 
-    int H = 480; // H of the image in pixel
-    int W = 640; // W of the image in pixel
-    int Imax = 255;
-    int FS = 255; // RGB full scale
+	int buff, pixel, i;
 
-    // my_printf("Debut de Mandelbrot :",H);
+	coproc_reset(COPROC_1_RST);
+	int sw = MemoryRead(CTRL_SL_READ);
 
-    int x_C;
-    int y_C;
+for(int py = 0; py < H; py++)
+{
+	y_C = y_A + dy*py;
 
-    int x_A = ~(3 << Nf - 2) + 1; // -1.75 au format A(31-Nf,Nf)
-    int y_A = ~(3 << Nf - 2) + 1; // -1.5 au format A(31-Nf,Nf)
-    int x_B = (3 << Nf - 2); // 0.75 au format A(31-Nf,Nf)
-    int y_B = (3 << Nf - 2); // 1.5 au format A(31-Nf,Nf)
+	for(int px = 0; px < W; px ++){
 
-    long long int dx = (x_B - x_A); // A(Ni+1,Nf)
-    long long int dy = (y_B - y_A); // U(Ni+1,Nf)
-    int dx64 = dx;
-    int dy64 = dy;
+		x_C = x_A + dx*px;
+		
+		if((sw&(1<<15)) != 0)
+		{
+			i = Convergence(x_C, y_C, Imax);
+		}
+		else if((sw&(1<<14)) != 0)
+		{
+			i = Convergence_opt(x_C, y_C, Imax);
+		}
+		else
+		{
+			coproc_write(COPROC_1_RW, x_C);
+			coproc_write(COPROC_1_RW, y_C);	
+			int clk = r_timer();
 
-    dx64 = ((dx64 << Nr) / W) >> Nr; // A(Ni+1,Nf+12)
-    dy64 = ((dy64 << Nr) / H) >> Nr; // A(Ni+1,Nf+12)
-    dx = dx64;
-    dy = dy64;
+			while(r_timer() - clk < 300)
+			{
+			}
 
-    //my_printf("dx :", dx);
-    //my_printf("dy :", dy);
+			i = coproc_read(COPROC_1_RW);
+		}
 
-    for (int py = 0; py < H; py++)
-        //for(int py = 400; py < 401; py++)
-    {
-        int prod = (dy * py);
-        //my_printf("prod", prod);
-        y_C = y_A + dy * py;
-        //my_printf("py :",py);
-        for (int px = 0; px < W; px++) {
-            //for(int px = 6; px < 7; px ++){
-            //my_printf("px :",px);
-            prod = dx * px;
-            x_C = x_A + dx * px;
-            // my_printf("x_C :", x_C);
-            // my_printf("y_C :", y_C);
-            //coproc_write(COPROC_1_RW, x_C);
-            //coproc_write(COPROC_1_RW, y_C);
+		pixel = i;
 
-            int i;
-
-            i = Convergence(x_C, y_C, Imax);
-            //my_printf("i soft:", i);
-            /*i = 1;
-            while(i > 0) // tant que le bit de poind fort vaut 0 <=> done == 0
-            {
-              i = coproc_read(COPROC_1_RW);
-            }
-
-            i = i&0x00000FFF;  // iter number is on 12 bits
-      */
-            // my_printf("i hard:", i);
-            // my_printf("i :", i);
-            int pixel = ((i >> 4) << 8 | (i >> 4) << 4 | (i >> 4));
-            // my_printf("px :",pixel);
-            //coproc_write(COPROC_4_RW, pixel);
-            MemoryWrite(0x20000120, pixel);
-            //coproc_write(COPROC_4_RW, i);
-            //coproc_write(COPROC_4_RW, i);
-        }
-    }
+		buff = px;
+		buff = (buff << 6) | py;
+		buff = (buff << 16) | pixel;
+		MemoryWrite(OLED_RW, buff);		
+	}
 }
 
+}
+
+int main(int argc, char **argv) {
+
+	int x_A = ~(3 << Nf - 2) + 1; // -1.75 au format A(31-Nf,Nf)
+    	int y_A = ~(3 << Nf - 2) + 1; // -1.5 au format A(31-Nf,Nf)
+	int x_B = (3 <<  Nf - 2); // 0.75 au format A(31-Nf,Nf)
+    	int y_B = (3 <<  Nf - 2); // 1.5 au format A(31-Nf,Nf)
+
+	/*my_printf("x_A=",x_A);
+	my_printf("y_A=",y_A);
+	my_printf("x_B=",x_B);
+	my_printf("y_B=",y_B);*/
+
+	int H = 64;
+	int W = 96;
+	int Imax = 255;
+
+	MemoryWrite(OLED_RST, 1); // reset the oled_rgb
+
+	generate_mandelbrot(H, W, Imax, 255, x_A, y_A, x_B, y_B);
+	
+	while(1)
+	{
+
+		int sw;
+		int DX, DY;
+
+		puts("\nReady, push a button to move/zoom\n");
+		while(MemoryRead(BUTTONS_CHANGE) == 0){}
+		int buttons = MemoryRead(BUTTONS_VALUES);
+		while(MemoryRead(BUTTONS_CHANGE) == 0){}
+	
+		sw = MemoryRead(CTRL_SL_READ);
+
+		switch(buttons)
+		{
+			case(CENTER_BUTTON):
+				if((sw&1) == 1)
+				{
+					printf("zoom in\n");
+					DX = x_B - x_A;
+					DY = y_B - y_A;
+					x_A = x_A + (DX >> 2);
+					y_A = y_A + (DY >> 2);
+					x_B = x_B - (DX >> 2);
+					y_B = y_B - (DY >> 2);
+					//printf("x_A,=%d, y_A=%d, x_B=%f, y_B=%f\n",x_A,y_A,x_B,y_B);
+					
+				}
+				else if((sw&1) == 0)
+				{
+					printf("zoom out\n");
+					DX = x_B - x_A;
+					DY = y_B - y_A;
+					x_A = x_A - (DX >> 1);
+					y_A = y_A - (DY >> 1);
+					x_B = x_B + (DX >> 1);
+					y_B = y_B + (DY >> 1);
+					//printf("x_A,=%f, y_A=%f, x_B=%f, y_B=%f",x_A,y_A,x_B,y_B);
+				}
+				else
+				{
+					break;
+				}
+				break;
+			case(RIGHT_BUTTON):
+				printf("move right\n");
+				DX = x_B - x_A;
+				x_A = x_A + (DX >> 3);
+				x_B = x_B + (DX >> 3);
+				//printf("x_A,=%f, y_A=%f, x_B=%f, y_B=%f",x_A,y_A,x_B,y_B);
+			break;
+			case(DOWN_BUTTON):
+				printf("move down\n");
+				DY = y_B - y_A;
+				y_A = y_A + (DY >> 3);
+				y_B = y_B + (DY >> 3);
+				//printf("x_A,=%f, y_A=%f, x_B=%f, y_B=%f",x_A,y_A,x_B,y_B);
+			break;
+			case(UP_BUTTON):
+				printf("move up\n");
+				DY = y_B - y_A;
+				y_A = y_A - (DY >> 3);
+				y_B = y_B - (DY >> 3);
+				//printf("x_A,=%f, y_A=%f, x_B=%f, y_B=%f",x_A,y_A,x_B,y_B);				
+			break;
+			case(LEFT_BUTTON):
+				printf("move left\n");
+				DX = x_B - x_A;
+				x_A = x_A - (DX >> 3);
+				x_B = x_B - (DX >> 3);
+				//printf("x_A,=%f, y_A=%f, x_B=%f, y_B=%f",x_A,y_A,x_B,y_B);
+			break;
+			default:
+				printf("no zoom/move\n");
+				my_printf("buttons=",buttons);
+				break;
+			
+		}
+		generate_mandelbrot(H, W, Imax, 255, x_A, y_A, x_B, y_B);
+
+	}
+
+	printf("terminating program");
+	return(0);
+
+}
 
 

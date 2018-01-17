@@ -291,8 +291,31 @@ architecture logic of plasma is
             backgnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"00";
             scroll_up    : in  STD_LOGIC := '0';
             row_clear    : in  STD_LOGIC := '0';
-            screen_clear : in  STD_LOGIC;
+            screen_clear : in  STD_LOGIC := '0';
 
+            PMOD_CS      : out STD_LOGIC;
+            PMOD_MOSI    : out STD_LOGIC;
+            PMOD_SCK     : out STD_LOGIC;
+            PMOD_DC      : out STD_LOGIC;
+            PMOD_RES     : out STD_LOGIC;
+            PMOD_VCCEN   : out STD_LOGIC;
+            PMOD_EN      : out STD_LOGIC);
+  end component;
+  
+  component PmodOLEDrgb_bitmap is
+      Generic (CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+               BPP         : integer range 1 to 16 := 16; -- bits per pixel
+               GREYSCALE   : boolean := False;            -- color or greyscale ? (only for BPP>6)
+               LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
+      Port (clk          : in  STD_LOGIC;
+            reset        : in  STD_LOGIC;
+            
+            pix_write    : in  STD_LOGIC;
+            pix_col      : in  STD_LOGIC_VECTOR(    6 downto 0);
+            pix_row      : in  STD_LOGIC_VECTOR(    5 downto 0);
+            pix_data_in  : in  STD_LOGIC_VECTOR(BPP-1 downto 0);
+            pix_data_out : out STD_LOGIC_VECTOR(BPP-1 downto 0);
+            
             PMOD_CS      : out STD_LOGIC;
             PMOD_MOSI    : out STD_LOGIC;
             PMOD_SCK     : out STD_LOGIC;
@@ -811,13 +834,13 @@ begin  --architecture
 	--
 	------------------------------------------------------------------------------------------------------
 
---   u5a_coproc: entity WORK.coproc_1 port map(
---		clock          => clk,
---		reset          => cop_1_reset,
---		INPUT_1        => cpu_data_w,
---		INPUT_1_valid  => cop_1_valid,
---		OUTPUT_1       => cop_1_output
---	);
+   u5a_coproc: entity WORK.coproc_1 port map(
+		clock          => clk,
+		reset          => cop_1_reset,
+		INPUT_1        => cpu_data_w,
+		INPUT_1_valid  => cop_1_valid,
+		OUTPUT_1       => cop_1_output
+	);
 
 --   u5b_coproc: entity WORK.coproc_2 port map(
 --		clock          => clk,
@@ -853,34 +876,50 @@ begin  --architecture
 	);
 
 
-  -- OLED
-  	plasma_oled: PmodOLEDrgb_charmap
-    Generic map(CLK_FREQ_HZ => CLK_FREQ_HZ,
-                PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
-                LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+--  -- OLED
+--  	plasma_oled: PmodOLEDrgb_charmap
+--    Generic map(CLK_FREQ_HZ => CLK_FREQ_HZ,
+--                PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+--                LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
 
-     port map (
-  		clk          => clk,
-      reset        => oled_reset,
+--     port map (
+--  		clk          => clk,
+--      reset        => oled_reset,
 
-      char_write   => oled_valid,
-      char_col     => cpu_data_w( 19 downto 16 ),
-      char_row     => cpu_data_w( 10 downto 8 ),
-      char         => cpu_data_w( 7 downto 0 ),
-      ready        => oled_output(0),
+--      char_write   => oled_valid,
+--      char_col     => cpu_data_w( 19 downto 16 ),
+--      char_row     => cpu_data_w( 10 downto 8 ),
+--      char         => cpu_data_w( 7 downto 0 ),
+--      ready        => oled_output(0),
 
-      --scroll_up    => cpu_data_w(26),
-      --row_clear    => cpu_data_w(25),
-      screen_clear => cpu_data_w(24),
-
-      PMOD_CS      => OLED_PMOD_CS,
-      PMOD_MOSI    => OLED_PMOD_MOSI,
-      PMOD_SCK     => OLED_PMOD_SCK,
-      PMOD_DC      => OLED_PMOD_DC,
-      PMOD_RES     => OLED_PMOD_RES,
-      PMOD_VCCEN   => OLED_PMOD_VCCEN,
-      PMOD_EN      => OLED_PMOD_EN
-  	);
+--      PMOD_CS      => OLED_PMOD_CS,
+--      PMOD_MOSI    => OLED_PMOD_MOSI,
+--      PMOD_SCK     => OLED_PMOD_SCK,
+--      PMOD_DC      => OLED_PMOD_DC,
+--      PMOD_RES     => OLED_PMOD_RES,
+--      PMOD_VCCEN   => OLED_PMOD_VCCEN,
+--      PMOD_EN      => OLED_PMOD_EN
+--  	);
+  	
+  	PMOD_oled_rgb_bitmap : PmodOLEDrgb_bitmap Generic map(CLK_FREQ_HZ => CLK_FREQ_HZ,        -- by default, we run at 100MHz
+                  BPP => 16,
+                  GREYSCALE => false,            -- color or greyscale ? (only for BPP>6)
+                  LEFT_SIDE => false)           -- True if the Pmod is on the left side of the board
+         Port map(clk => clk,
+               reset => oled_reset,
+               pix_write => oled_valid,
+               pix_col => cpu_data_w(28 downto 22),
+               pix_row => cpu_data_w(21 downto 16),
+               pix_data_in => cpu_data_w(15 downto 0),
+               pix_data_out => oled_output(15 downto 0),
+               
+               PMOD_CS      => OLED_PMOD_CS,
+               PMOD_MOSI    => OLED_PMOD_MOSI,
+               PMOD_SCK     => OLED_PMOD_SCK,
+               PMOD_DC      => OLED_PMOD_DC,
+               PMOD_RES     => OLED_PMOD_RES,
+               PMOD_VCCEN   => OLED_PMOD_VCCEN,
+               PMOD_EN      => OLED_PMOD_EN);
 
 --	u5d_coproc: entity WORK.coproc_3 port map(-- atention 2x coproc 3
 --         clock          => clk,

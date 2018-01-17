@@ -32,6 +32,7 @@
 #define FLASH_BASE        0x30000000
 #define BUTTONS_VALUES    0x40000100
 #define BUTTONS_CHANGE    0x40000104
+#define CTRL_SL_READ      0x400000C4
 
 /*********** GPIO out bits ***************/
 #define ETHERNET_MDIO     0x00200000

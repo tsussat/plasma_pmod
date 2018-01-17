@@ -14,12 +14,12 @@
 #MY_PROJECT=ray_tracer_v3
 #MY_PROJECT=filtre
 #MY_PROJECT=filtre_no_fifo
-#MY_PROJECT=tuto_plasma
-#MY_PROJECT=mandelbrot
+#MY_PROJECT=scale
+MY_PROJECT=mandelbrot
 #MY_PROJECT=boot_loader
 #MY_PROJECT=hello
 #MY_PROJECT=switch_led
-MY_PROJECT=rgb_oled
+#MY_PROJECT=rgb_oled
 
 SRC_DIR=Sources
 INC_DIR=Includes
@@ -31,7 +31,6 @@ SYN_DIR=./SYNTHESIS
 
 
 VHDL_PLASMA_DIR = $(VHDL_DIR)/PLASMA
-VHDL_CUSTOM_DIR = $(VHDL_DIR)/custom/$(MY_PROJECT)
 
 SHARED_FILES = \
 	$(C_DIR)/$(SHARED_DIR)/plasmaSoPCDesign.h\
@@ -66,9 +65,9 @@ soft:
 	$(AS_MIPS) $(C_DIR)/$(SHARED_DIR)/uboot.asm -o $(OBJ_DIR)/uboot.o
 	$(GCC_MIPS) $(C_DIR)/$(SHARED_DIR)/no_os.c -o $(OBJ_DIR)/no_os.o
 	$(GCC_MIPS) $(SHARED_FILES)
-	$(GCC_MIPS) -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(INC_DIR)/*.h
-	$(GCC_MIPS) -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/*.c
-	$(GCC_MIPS) -DVHDL_SIMULATION $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/main.c -o $(OBJ_DIR)/main.o
+	$(GCC_MIPS) -DVHDL_SIMULATION -static-libgcc -lgcc $(C_DIR)/$(MY_PROJECT)/$(INC_DIR)/*.h
+	$(GCC_MIPS) -DVHDL_SIMULATION -static-libgcc -lgcc $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/*.c
+	$(GCC_MIPS) -DVHDL_SIMULATION -static-libgcc -lgcc $(C_DIR)/$(MY_PROJECT)/$(SRC_DIR)/main.c -o $(OBJ_DIR)/main.o
 	mv *.o $(OBJ_DIR)
 	$(LD_MIPS) -Ttext 0 -eentry -Map $(OBJ_DIR)/test.map -s -N -o test.axf $(OBJ_DIR)/boot.o $(OBJ_DIR)/main.o $(OBJ_DIR)/no_os.o
 	$(CONVERT_BIN)
@@ -96,7 +95,6 @@ vhdl:
 	ls HDL/PLASMA/*.vhd > tmp.txt
 	sed 's/^/vhdl work ..\//' tmp.txt > $(SIM_DIR)/$(SIM_TOP).prj
 	rm tmp.txt
-	cp $(VHDL_CUSTOM_DIR)/*.vhd $(VHDL_PLASMA_DIR)
 	xelab -prj $(SIM_DIR)/$(SIM_TOP).prj -debug typical $(SIM_TOP) -s $(SIM_TOP) --nolog
 
 simu:

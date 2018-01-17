@@ -42,22 +42,22 @@ begin
 		variable diff1, diff2, diff3, diff4 : UNSIGNED(7 downto 0);
 		variable mult1, mult2, mult3, mult4 : UNSIGNED(23 downto 0);
 	begin						 
---		data1 := UNSIGNED( INPUT_1(7 downto 0) );
---		data2 := UNSIGNED( INPUT_1(15 downto 8) );
---		data3 := UNSIGNED( INPUT_1(23 downto 16) );
---		data4 := UNSIGNED( INPUT_1(31 downto 24) );
---		diff1 := data1 - min_reg; -- 8
---		diff2 := data2 - min_reg; -- 8
---		diff3 := data3 - min_reg; -- 8
---		diff4 := data4 - min_reg; -- 8
---		mult1 := diff1 * beta_reg; -- 24
---		mult2 := diff2 * beta_reg; -- 24
---		mult3 := diff3 * beta_reg; -- 24
---		mult4 := diff4 * beta_reg; -- 24
---		OUTPUT_1_tmp(7 downto 0) <= std_logic_vector(mult1(15 downto 8));
---		OUTPUT_1_tmp(15 downto 8) <= std_logic_vector(mult2(15 downto 8));
---		OUTPUT_1_tmp(23 downto 16) <= std_logic_vector(mult3(15 downto 8));
---		OUTPUT_1_tmp(31 downto 24) <= std_logic_vector(mult4(15 downto 8));
+		data1 := UNSIGNED( INPUT_1(7 downto 0) );
+		data2 := UNSIGNED( INPUT_1(15 downto 8) );
+		data3 := UNSIGNED( INPUT_1(23 downto 16) );
+		data4 := UNSIGNED( INPUT_1(31 downto 24) );
+		diff1 := data1 - min_reg; -- 8
+		diff2 := data2 - min_reg; -- 8
+		diff3 := data3 - min_reg; -- 8
+		diff4 := data4 - min_reg; -- 8
+		mult1 := diff1 * beta_reg; -- 24
+		mult2 := diff2 * beta_reg; -- 24
+		mult3 := diff3 * beta_reg; -- 24
+		mult4 := diff4 * beta_reg; -- 24
+		OUTPUT_1_tmp(7 downto 0) <= std_logic_vector(mult1(15 downto 8));
+		OUTPUT_1_tmp(15 downto 8) <= std_logic_vector(mult2(15 downto 8));
+		OUTPUT_1_tmp(23 downto 16) <= std_logic_vector(mult3(15 downto 8));
+		OUTPUT_1_tmp(31 downto 24) <= std_logic_vector(mult4(15 downto 8));
 	end process;
 	-------------------------------------------------------------------------
 

@@ -1,4 +1,3 @@
-
 ---------------------------------------------------------------------
 -- TITLE: Arithmetic Logic Unit
 -- AUTHOR: Steve Rhoads (rhoadss@yahoo.com)
@@ -15,32 +14,37 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.mlite_pack.all;
 
-entity function_3 is
+entity coproc_3 is
    port(
-		INPUT_1  : in  std_logic_vector(31 downto 0);
-		INPUT_2  : in  std_logic_vector(31 downto 0);
-		OUTPUT_1 : out std_logic_vector(31 downto 0)
+		clock          : in  std_logic;
+		reset          : in  std_logic;
+		INPUT_1        : in  std_logic_vector(31 downto 0);
+		INPUT_1_valid  : in  std_logic;
+		OUTPUT_1       : out std_logic_vector(31 downto 0)
 	);
 end; --comb_alu_1
 
-architecture logic of function_3 is
-
-constant Nf : INTEGER := 18;
-
+architecture logic of coproc_3 is
+	SIGNAL mem : UNSIGNED(31 downto 0);
 begin
 	
 	-------------------------------------------------------------------------
-	computation : process (INPUT_1, INPUT_2)
-		variable rTemp1  : SIGNED(63 downto 0);
-		variable rTemp2  : SIGNED(63 downto 0);
-		variable rTemp3  : SIGNED(63 downto 0);
+	process (clock, reset)
 	begin
-		rTemp1 := (signed(INPUT_1) * signed(INPUT_1));
-		rTemp2 := (signed(INPUT_2) * signed(INPUT_2));
-		rTemp3 := rTemp1+rTemp2;
-		OUTPUT_1 <= std_logic_vector(rTemp3(32+(Nf-1) downto Nf));  --x1²+y1²
+		IF clock'event AND clock = '1' THEN
+			IF reset = '1' THEN
+				mem <= TO_UNSIGNED( 0, 32);
+			ELSE
+				IF INPUT_1_valid = '1' THEN
+					mem <= UNSIGNED(INPUT_1) + TO_UNSIGNED( 3, 32);
+				ELSE
+					mem <= mem;
+				END IF;
+			END IF;
+		END IF;
 	end process;
-	
 	-------------------------------------------------------------------------
+
+	OUTPUT_1 <= STD_LOGIC_VECTOR( mem );
 
 end; --architecture logic

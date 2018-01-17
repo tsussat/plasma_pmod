@@ -1,3 +1,4 @@
+
 ---------------------------------------------------------------------
 -- TITLE: Arithmetic Logic Unit
 -- AUTHOR: Steve Rhoads (rhoadss@yahoo.com)
@@ -10,9 +11,9 @@
 --    Implements the ALU.
 ---------------------------------------------------------------------
 library ieee;
-use ieee.std_logic_1164.all;
+use ieee.std_logic_1164.all;    
 use ieee.numeric_std.all;
-use work.mlite_pack.all;
+use work.mlite_pack.all;  
 
 entity function_1 is
    port(
@@ -23,22 +24,22 @@ entity function_1 is
 end; --comb_alu_1
 
 architecture logic of function_1 is
+
+constant Nf : INTEGER := 18;
+
 begin
 	
 	-------------------------------------------------------------------------
 	computation : process (INPUT_1, INPUT_2)
-		variable rTemp1  : UNSIGNED(31 downto 0);
-		variable rTemp2  : UNSIGNED(31 downto 0);
-		variable rTemp3  : UNSIGNED(31 downto 0);
+		variable rTemp1  : SIGNED(63 downto 0);
+		variable rTemp2  : SIGNED(31 downto 0);
+		variable rTemp3  : SIGNED(31 downto 0);
 	begin
-		if(INPUT_1 > INPUT_2) then
-			OUTPUT_1 <= INPUT_1;
-		else
-			OUTPUT_1 <= INPUT_2;
-		end if;
-
+		rTemp1 := (signed(INPUT_1) * signed(INPUT_2));
+		rTemp2 := rTemp1(30+Nf downto Nf)&'0';
+		OUTPUT_1 <= std_logic_vector(rTemp2);  
 	end process;
+	
 	-------------------------------------------------------------------------
 
 end; --architecture logic
-
