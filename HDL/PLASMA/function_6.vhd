@@ -1,4 +1,3 @@
-
 ---------------------------------------------------------------------
 -- TITLE: Arithmetic Logic Unit
 -- AUTHOR: Steve Rhoads (rhoadss@yahoo.com)
@@ -21,25 +20,13 @@ entity function_6 is
 		INPUT_2  : in  std_logic_vector(31 downto 0);
 		OUTPUT_1 : out std_logic_vector(31 downto 0)
 	);
-end; --comb_alu_6
+end; --comb_alu_1
 
 architecture logic of function_6 is
-
-constant Nf : INTEGER := 18;
-
 begin
 	
 	-------------------------------------------------------------------------
-	computation : process (INPUT_1, INPUT_2)
-		variable rTemp1  : SIGNED(63 downto 0);
-		variable rTemp2  : SIGNED(31 downto 0);
-		variable rTemp3  : SIGNED(31 downto 0);
-	begin
-		rTemp1 := (signed(INPUT_1) * signed(INPUT_2));
-		rTemp2 := rTemp1(30+Nf downto Nf)&'0';
-		OUTPUT_1 <= std_logic_vector(rTemp2);  
-	end process;
-	
+	 OUTPUT_1 <= std_logic_vector(signed(INPUT_1)+signed(INPUT_2));
 	-------------------------------------------------------------------------
 
 end; --architecture logic

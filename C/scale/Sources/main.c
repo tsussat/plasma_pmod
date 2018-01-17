@@ -24,7 +24,7 @@ int main(int argc, char ** argv) {
 	for(i=0;i<pixel_nb;i++){
 		my_printf(" val=> ", data[i]);
 	}	
-	puts("Aaaaaaffichage des valeurs initiales termine\n");
+	puts("Affichage des valeurs initiales termine\n");
 
 	// Start timer
 	start_c = r_timer();
