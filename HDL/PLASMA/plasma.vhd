@@ -175,6 +175,8 @@ architecture logic of plasma is
    signal enable_vga        : std_logic;
    signal enable_vga_read   : std_logic;
    signal enable_vga_write  : std_logic;
+   signal ctrl_7seg_valid   : std_logic;
+   signal ctrl_7seg_reset   : std_logic;
 
    signal ctrl_SL_reset     : std_logic;
    signal ctrl_SL_valid	    : std_logic;
@@ -314,8 +316,8 @@ begin  --architecture
 
    --led <= sw;
 
-   seg <= "1011010";
-   an <= sw(7 downto 0);
+   --seg <= "1011010";
+   --an <= sw(7 downto 0);
 
 
    write_enable <= '1' when cpu_byte_we /= "0000" else '0';
@@ -373,6 +375,9 @@ begin  --architecture
 
    enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
 
+   ctrl_7seg_valid <= '1' when (cpu_address = x"40000200") AND (cpu_pause = '0') else '0';
+   ctrl_7seg_reset <= '1' when (cpu_address = x"40000204") AND (cpu_pause = '0') else '0';
+   
 --   assert cop_4_valid /= '1' severity failure;
 	--
 	-- ON LIT/ECRIT DANS LA MEMOIRE LOCALE UNIQUEMENT LORSQUE LE BUS
@@ -834,6 +839,18 @@ begin  --architecture
 --		INPUT_1_valid  => cop_3_valid,
 --		OUTPUT_1       => cop_3_output
 --	);
+
+-- seven segment display management bloc
+
+
+  ctrl_7seg1: entity WORK.ctrl_7seg port map(
+      clock          => clk,
+      reset          => ctrl_7seg_reset,
+      INPUT_1        => cpu_data_w,
+      INPUT_1_valid  => ctrl_7seg_valid,
+      OUTPUT_7s      => seg,
+      AN             => an
+  );
 
 -- Controller Switchs/Leds
 	plasma_ctrl_SL: ctrl_SL port map (
