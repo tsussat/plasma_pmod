@@ -63,6 +63,9 @@
 --   0x40000100  Buttons controller values
 --   0x40000104  Buttons controller change
 
+--   0x40000200  Seven segment display input
+--   0x40000204  Seven segment display reset
+
 --   0x80000000  DMA ENGINE (NOT WORKING YET)
 ---------------------------------------------------------------------
 library ieee;
@@ -377,7 +380,7 @@ begin  --architecture
 
    ctrl_7seg_valid <= '1' when (cpu_address = x"40000200") AND (cpu_pause = '0') else '0';
    ctrl_7seg_reset <= '1' when (cpu_address = x"40000204") AND (cpu_pause = '0') else '0';
-   
+
 --   assert cop_4_valid /= '1' severity failure;
 	--
 	-- ON LIT/ECRIT DANS LA MEMOIRE LOCALE UNIQUEMENT LORSQUE LE BUS
