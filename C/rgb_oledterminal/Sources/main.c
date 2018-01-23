@@ -1,3 +1,14 @@
+/*
+This code can be used to test the TERMINAL module of the OledRGB PMOD develop by
+Yannick Bornat.
+Entire sentences can be displayed on the screen using this module.
+
+File: main.c
+Author: Igor Papandinas
+Last Update: 17/01/2018
+Plasma, coprocessor address:	OLEDTERMINAL_RW		-->	0x400000A4
+								OLEDTERMINAL_RST	-->	0x400000AC
+*/
 
 #include "../../shared/plasma.h"
 #include "../../shared/plasmaCoprocessors.h"
@@ -6,80 +17,51 @@
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
-
-int longueurChaine(const char* chaine)
+// This function measures the string lenght from the buffer
+int bufferLenght(const char* buffer)
 {
-    int nombreDeCaracteres = 0;
-    char caractereActuel = 0;
+    int lenght = 0;
+    char caracterPointed = 0;
 
     do
     {
-        caractereActuel = chaine[nombreDeCaracteres];
-        nombreDeCaracteres++;
+        caracterPointed = buffer[lenght];
+        lenght++;
     }
-    while(caractereActuel != '\0'); // On boucle tant qu'on n'est pas arrivé à l'\0
+    while(caracterPointed != '\0');
 
-    nombreDeCaracteres--; // On retire 1 caractère de long pour ne pas compter le caractère \0
+    lenght--; // -1 because of \0
 
-    return nombreDeCaracteres;
+    return lenght;
 }
 
-/*
-// printCar function print a specific caracter 'car' in a given row 'row' and column 'col'.
-void printCar( char row, char col, char car) {
-	int buff = 0x00000000;
-
-	buff = col;
-	buff = (buff << 8) | row;
-	buff = (buff << 8) | car;
-
-
-	while( !MemoryRead(OLED_RW) ) {}
-		MemoryWrite(OLED_RW, buff);
-}
-
-// printOLED function print a sentence of caracters 'buffer'.
-void printOLED( char row, char *buffer) {
-	int i = 0;
-	int col = 0x00;
-
-	for( i = 0; i < longueurChaine(buffer); i++ ) {
-		printCar( row, col, buffer[i] );
-		col++;
-	}
-
-}
-*/
 
 int main( int argc, char ** argv ) {
 
 	int i = 0;
-	char buffer1[] = "Henri, Paul...  ";
-  char buffer2[] = "Ici le plasma...";
-  char buffer3[] = "...Pullup";
+	char buffer[128] =  "                "
+						"                "
+						"                "
+	                    " Terminal Module"
+	                    "     Working    "
+	                    "                "
+	                    "                "
+	                    "                ";
 
-	MemoryWrite( OLEDTERMINAL_RST, 1 ); // Reset the oled_rgb PMOD
+// Reset the oled_rgb PMOD
+	MemoryWrite(OLEDTERMINAL_RST, 1); 					
 
-	while( !MemoryRead( OLEDTERMINAL_RW ) ) {}		// Screen Clear (Black Background by defaulf)
-		MemoryWrite( OLEDTERMINAL_RW, 0x01000000 );
-
-
-  for ( i = 0; i < longueurChaine( buffer1 ); i++ ) {
-    while( !MemoryRead( OLEDTERMINAL_RW ) ) {}
-	   MemoryWrite( OLEDTERMINAL_RW, buffer1[i] );
-  }
-
-  for ( i = 0; i < longueurChaine( buffer2 ); i++ ) {
-    while( !MemoryRead( OLEDTERMINAL_RW ) ) {}
-	   MemoryWrite( OLEDTERMINAL_RW, buffer2[i] );
-  }
-
-  for ( i = 0; i < longueurChaine( buffer3 ); i++ ) {
-    while( !MemoryRead( OLEDTERMINAL_RW ) ) {}
-	   MemoryWrite( OLEDTERMINAL_RW, buffer3[i] );
-  }
+// Screen Clear (Black Background by defaulf)
+	while(!MemoryRead(OLEDTERMINAL_RW)) {}				
+		MemoryWrite(OLEDTERMINAL_RW, 0x01000000);
 
 
-	while(1) {
-	}
+// Buffer Print
+  	for (i = 0; i < bufferLenght(buffer); i++) {
+    	while(!MemoryRead(OLEDTERMINAL_RW)) {} 
+	   		MemoryWrite(OLEDTERMINAL_RW, buffer[i]);
+  	}
+
+	while(1)
+		;
 }

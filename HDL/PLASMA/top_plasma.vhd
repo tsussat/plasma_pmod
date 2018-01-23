@@ -22,7 +22,7 @@ entity top_plasma is port(
 	--led: out std_logic_vector(7 downto 0);
    i_uart : in std_logic;
    o_uart : out std_logic;
-	VGA_hs       : out std_logic;   -- horisontal vga syncr.
+	 VGA_hs       : out std_logic;   -- horisontal vga syncr.
    VGA_vs       : out std_logic;   -- vertical vga syncr.
    VGA_red      : out std_logic_vector(3 downto 0);   -- red output
    VGA_green    : out std_logic_vector(3 downto 0);   -- green output
@@ -49,19 +49,19 @@ entity top_plasma is port(
    btnR         : in std_logic;
    btnD         : in std_logic;
 
-	 	OLED_PMOD_CS      	: out STD_LOGIC;
-    OLED_PMOD_MOSI    	: out STD_LOGIC;
-    OLED_PMOD_SCK     	: out STD_LOGIC;
-    OLED_PMOD_DC      	: out STD_LOGIC;
-    OLED_PMOD_RES     	: out STD_LOGIC;
-    OLED_PMOD_VCCEN   	: out STD_LOGIC;
-    OLED_PMOD_EN      	: out STD_LOGIC
+   OLED_PMOD_CS      	: out STD_LOGIC;
+   OLED_PMOD_MOSI    	: out STD_LOGIC;
+   OLED_PMOD_SCK     	: out STD_LOGIC;
+   OLED_PMOD_DC      	: out STD_LOGIC;
+   OLED_PMOD_RES     	: out STD_LOGIC;
+   OLED_PMOD_VCCEN   	: out STD_LOGIC;
+   OLED_PMOD_EN      	: out STD_LOGIC
 	);
 end top_plasma;
 
 architecture rtl of top_plasma is
-		signal clk50, clk100_sig: std_logic;
-		signal rst : std_logic;
+	 signal clk50, clk100_sig: std_logic;
+	 signal rst : std_logic;
 
    signal led_tmp          : std_logic_vector(15 downto 0);
 
@@ -107,9 +107,9 @@ end process;
 	GENERIC MAP (
 		memory_type => "XILINX_16X",
 		log_file    => "UNUSED",
-      ethernet    => '0',
+    ethernet    => '0',
 		eUart       => '1',
-      use_cache   => '0'
+    use_cache   => '0'
 	)
 	PORT MAP(
 		clk           => clk50,
@@ -131,39 +131,39 @@ end process;
 		fifo_1_compteur  => x"00000000",
 		fifo_2_compteur  => x"00000000",
 
-		VGA_hs => VGA_hs,
-		VGA_vs => VGA_vs,
-		VGA_red => VGA_red,
+		VGA_hs 		=> VGA_hs,
+		VGA_vs 		=> VGA_vs,
+		VGA_red 	=> VGA_red,
 		VGA_green => VGA_green,
-		VGA_blue => VGA_blue,
+		VGA_blue 	=> VGA_blue,
 
 		sw        => sw,
 		led       => led,
 
-		RGB1_Red => RGB1_Red,
-		RGB1_Green => RGB1_Green,
-		RGB1_Blue => RGB1_Blue,
-		RGB2_Red => RGB2_Red,
-        RGB2_Green => RGB2_Green,
-        RGB2_Blue => RGB2_Blue,
+		RGB1_Red 		=> RGB1_Red,
+		RGB1_Green 	=> RGB1_Green,
+		RGB1_Blue 	=> RGB1_Blue,
+		RGB2_Red 		=> RGB2_Red,
+		RGB2_Green 	=> RGB2_Green,
+	  	RGB2_Blue 	=> RGB2_Blue,
 
-        seg         => seg,
-        an          => an,
+		seg         => seg,
+		an          => an,
 
-        btnCpuReset => btnCpuReset,
-        btnC => btnC,
-        btnU => btnU,
-        btnL => btnL,
-        btnR => btnR,
-        btnD => btnD,
+		btnCpuReset => btnCpuReset,
+		btnC 				=> btnC,
+		btnU 				=> btnU,
+		btnL 				=> btnL,
+		btnR 				=> btnR,
+		btnD 				=> btnD,
 
-					OLED_PMOD_CS	=> OLED_PMOD_CS,
-		    	OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
-		    	OLED_PMOD_SCK   => OLED_PMOD_SCK,
-		    	OLED_PMOD_DC    => OLED_PMOD_DC,
-		    	OLED_PMOD_RES   => OLED_PMOD_RES,
-		    	OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
-		    	OLED_PMOD_EN    => OLED_PMOD_EN,
+		OLED_PMOD_CS		=> OLED_PMOD_CS,
+		OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
+		OLED_PMOD_SCK   => OLED_PMOD_SCK,
+		OLED_PMOD_DC    => OLED_PMOD_DC,
+		OLED_PMOD_RES   => OLED_PMOD_RES,
+		OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
+		OLED_PMOD_EN    => OLED_PMOD_EN,
 
 		gpio0_out       => open,
 		gpioA_in        => x"00000000" --open

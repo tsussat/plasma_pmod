@@ -34,7 +34,7 @@ end ctrl_SL;
 
 architecture Behavioral of ctrl_SL is
 
-SIGNAL input_coproc, output_coproc 						: std_logic_vector(31 downto 0);
+SIGNAL input_coproc, output_coproc 	: std_logic_vector(31 downto 0);
 
 begin
 	

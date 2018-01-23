@@ -67,6 +67,8 @@
 ---------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_arith.all;
+use ieee.std_logic_unsigned.all;
 use work.mlite_pack.all;
 
 entity plasma is
@@ -76,6 +78,9 @@ entity plasma is
            eUart       : std_logic  := '0';
            use_cache   : std_logic  := '0';
            CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+           BPP         : integer range 1 to 16 := 16; -- bits per pixel
+           GREYSCALE   : boolean := False;			-- color or greyscale ? (only for BPP>6)
+           MAX_ON_TOP  : boolean := True;            
            LEFT_SIDE   : boolean := False );
    port(clk          : in std_logic;
 			clk_VGA			: in std_logic;
@@ -88,7 +93,7 @@ entity plasma is
 				byte_we      : out std_logic_vector(3  downto 0);
 				--data_write   : out std_logic_vector(31 downto 0);
 				--data_read    : in  std_logic_vector(31 downto 0);
-				---mem_pause_in : in std_logic;
+				--mem_pause_in : in std_logic;
 				no_ddr_start : out std_logic;
 				no_ddr_stop  : out std_logic;
 
@@ -115,33 +120,33 @@ entity plasma is
 				VGA_blue     : out std_logic_vector(3 downto 0);   -- blue output
 
 				sw           : in  std_logic_vector(15 downto 0);
-                led          : out std_logic_vector(15 downto 0);
+				led          : out std_logic_vector(15 downto 0);
 
-                RGB1_Red     : out std_logic;
-                RGB1_Green   : out std_logic;
-                RGB1_Blue    : out std_logic;
-                RGB2_Red     : out std_logic;
-                RGB2_Green   : out std_logic;
-                RGB2_Blue    : out std_logic;
+				RGB1_Red     : out std_logic;
+				RGB1_Green   : out std_logic;
+				RGB1_Blue    : out std_logic;
+				RGB2_Red     : out std_logic;
+				RGB2_Green   : out std_logic;
+				RGB2_Blue    : out std_logic;
 
-                OLED_PMOD_CS      	: out STD_LOGIC;
-          			OLED_PMOD_MOSI    	: out STD_LOGIC;
-           			OLED_PMOD_SCK     	: out STD_LOGIC;
-          			OLED_PMOD_DC      	: out STD_LOGIC;
-           			OLED_PMOD_RES     	: out STD_LOGIC;
-          			OLED_PMOD_VCCEN   	: out STD_LOGIC;
-         			  OLED_PMOD_EN      	: out STD_LOGIC;
+				OLED_PMOD_CS      : out STD_LOGIC;
+				OLED_PMOD_MOSI    : out STD_LOGIC;
+				OLED_PMOD_SCK     : out STD_LOGIC;
+				OLED_PMOD_DC      : out STD_LOGIC;
+				OLED_PMOD_RES     : out STD_LOGIC;
+				OLED_PMOD_VCCEN   : out STD_LOGIC;
+				OLED_PMOD_EN      : out STD_LOGIC;
 
 
-                seg          : out std_logic_vector(6 downto 0);
-                an           : out std_logic_vector(7 downto 0);
+				seg          : out std_logic_vector(6 downto 0);
+				an           : out std_logic_vector(7 downto 0);
 
-                btnCpuReset  : in std_logic;
-                btnC         : in std_logic;
-                btnU         : in std_logic;
-                btnL         : in std_logic;
-                btnR         : in std_logic;
-                btnD         : in std_logic;
+				btnCpuReset  : in std_logic;
+				btnC         : in std_logic;
+				btnU         : in std_logic;
+				btnL         : in std_logic;
+				btnR         : in std_logic;
+				btnD         : in std_logic;
 
 				gpio0_out    : out std_logic_vector(31 downto 0);
 				gpioA_in     : in  std_logic_vector(31 downto 0));
@@ -176,13 +181,41 @@ architecture logic of plasma is
    signal enable_vga_read   : std_logic;
    signal enable_vga_write  : std_logic;
 
+   signal oled_pinout		: std_logic_vector(6 downto 0);
+
    signal ctrl_SL_reset     : std_logic;
    signal ctrl_SL_valid	    : std_logic;
    signal ctrl_SL_output    : std_logic_vector(31 downto 0);
 
-   signal oled_reset        : std_logic;
-   signal oled_valid	      : std_logic;
-   signal oled_output	      : std_logic_vector( 31 downto 0 ):= "00000000000000000000000000000000";
+   signal oledcharmap_reset   	: std_logic;
+   signal oledcharmap_valid		: std_logic;
+   signal oledcharmap_output  	: std_logic_vector(31 downto 0):= "00000000000000000000000000000000";
+   signal oledcharmap_pinout	: std_logic_vector(6 downto 0);
+   signal oledcharmap_use 		: std_logic;
+
+   signal oledterminal_reset  	: std_logic;
+   signal oledterminal_valid	: std_logic;
+   signal oledterminal_output 	: std_logic_vector(31 downto 0):= "00000000000000000000000000000000";
+   signal oledterminal_pinout	: std_logic_vector(6 downto 0);
+   signal oledterminal_use 		: std_logic;
+
+   signal oledbitmap_reset  : std_logic;
+   signal oledbitmap_valid	: std_logic;
+   signal oledbitmap_output : std_logic_vector(31 downto 0):= "00000000000000000000000000000000";
+   signal oledbitmap_pinout : std_logic_vector(6 downto 0);
+   signal oledbitmap_use 	: std_logic;
+   
+   signal olednibblemap_reset   : std_logic;
+   signal olednibblemap_valid	: std_logic;
+   signal olednibblemap_output  : std_logic_vector(31 downto 0):= "00000000000000000000000000000000";
+   signal olednibblemap_pinout	: std_logic_vector(6 downto 0);
+   signal olednibblemap_use 	: std_logic;
+   
+   signal oledsigplot_reset : std_logic;
+   signal oledsigplot_valid	: std_logic;
+   signal oledsigplot_output: std_logic_vector(31 downto 0):= "00000000000000000000000000000000";
+   signal oledsigplot_pinout: std_logic_vector(6 downto 0);
+   signal oledsigplot_use 	: std_logic;
 
    signal buttons_values    : std_logic_vector(31 downto 0);
    signal buttons_change    : std_logic_vector(31 downto 0);
@@ -302,6 +335,110 @@ architecture logic of plasma is
             PMOD_EN      : out STD_LOGIC);
   end component;
 
+  component PmodOLEDrgb_terminal is
+      Generic (CLK_FREQ_HZ   : integer := 100000000;        -- by default, we run at 100MHz
+               PARAM_BUFF    : boolean := False;            -- if True, no need to hold inputs while module busy
+               LEFT_SIDE     : boolean := False);           -- True if the Pmod is on the left side of the board
+      Port (clk          : in  STD_LOGIC;
+            reset        : in  STD_LOGIC;
+
+            char_write   : in  STD_LOGIC;
+            char         : in  STD_LOGIC_VECTOR(7 downto 0);
+            ready        : out STD_LOGIC;
+            foregnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"FF";
+            backgnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"00";
+            screen_clear : in  STD_LOGIC;
+
+            PMOD_CS      : out STD_LOGIC;
+            PMOD_MOSI    : out STD_LOGIC;
+            PMOD_SCK     : out STD_LOGIC;
+            PMOD_DC      : out STD_LOGIC;
+            PMOD_RES     : out STD_LOGIC;
+            PMOD_VCCEN   : out STD_LOGIC;
+            PMOD_EN      : out STD_LOGIC);
+  end component;
+
+
+  component PmodOLEDrgb_bitmap is
+      Generic (CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+               BPP         : integer range 1 to 16 := 16; -- bits per pixel
+               GREYSCALE   : boolean := False;            -- color or greyscale ? (only for BPP>6)
+               LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
+      Port (clk          : in  STD_LOGIC;
+            reset        : in  STD_LOGIC;
+
+            pix_write    : in  STD_LOGIC;
+            pix_col      : in  STD_LOGIC_VECTOR(    6 downto 0);
+            pix_row      : in  STD_LOGIC_VECTOR(    5 downto 0);
+            pix_data_in  : in  STD_LOGIC_VECTOR(BPP-1 downto 0);
+            pix_data_out : out STD_LOGIC_VECTOR(BPP-1 downto 0);
+
+            PMOD_CS      : out STD_LOGIC;
+            PMOD_MOSI    : out STD_LOGIC;
+            PMOD_SCK     : out STD_LOGIC;
+            PMOD_DC      : out STD_LOGIC;
+            PMOD_RES     : out STD_LOGIC;
+            PMOD_VCCEN   : out STD_LOGIC;
+            PMOD_EN      : out STD_LOGIC);
+  end component;
+
+
+	component PmodOLEDrgb_nibblemap is
+    Generic (CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+             PARAM_BUFF  : boolean := False;            -- if True, no need to hold inputs while module busy
+             LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
+    Port (clk          : in  STD_LOGIC;
+          reset        : in  STD_LOGIC;
+          
+          nibble_write : in  STD_LOGIC;
+          nibble_col   : in  STD_LOGIC_VECTOR(3 downto 0);
+          nibble_row   : in  STD_LOGIC_VECTOR(2 downto 0);
+          nibble       : in  STD_LOGIC_VECTOR(3 downto 0);
+          ready        : out STD_LOGIC;
+          foregnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"FF";
+          backgnd      : in  STD_LOGIC_VECTOR(7 downto 0):=x"00";
+          nibble_clear : in  STD_LOGIC := '0';
+          row_clear    : in  STD_LOGIC := '0';
+          screen_clear : in  STD_LOGIC := '0';
+          
+          PMOD_CS      : out STD_LOGIC;
+          PMOD_MOSI    : out STD_LOGIC;
+          PMOD_SCK     : out STD_LOGIC;
+          PMOD_DC      : out STD_LOGIC;
+          PMOD_RES     : out STD_LOGIC;
+          PMOD_VCCEN   : out STD_LOGIC;
+          PMOD_EN      : out STD_LOGIC);
+  	end component;
+  	
+  	
+  	component PmodOLEDrgb_sigplot is
+    Generic (CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+             PARAM_BUFF  : boolean := False;            -- should parameters be bufferized
+             MAX_ON_TOP  : boolean := True;             -- max value is on top of the screen, min value is below.
+             LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
+    Port (clk          : in  STD_LOGIC;
+          reset        : in  STD_LOGIC;
+
+          sample       : in  STD_LOGIC_VECTOR(5 downto 0); -- the value of the new sample
+          sample_en    : in  STD_LOGIC;                    -- enable bit for the new sample
+          sample_num   : in  STD_LOGIC_VECTOR(1 downto 0); -- the curve considered
+          
+          disp_shift   : in  STD_LOGIC;                    -- enables the display shift
+          back_grad    : in  STD_LOGIC_vector(3 downto 0):="0000"; -- a grey level to eventually provide graduation
+          
+          ready        : out STD_LOGIC;                    -- commands can only be sent if ready = '1'.
+          
+          PMOD_CS      : out STD_LOGIC;
+          PMOD_MOSI    : out STD_LOGIC;
+          PMOD_SCK     : out STD_LOGIC;
+          PMOD_DC      : out STD_LOGIC;
+          PMOD_RES     : out STD_LOGIC;
+          PMOD_VCCEN   : out STD_LOGIC;
+          PMOD_EN      : out STD_LOGIC);
+	end component;
+	
+	
+
 begin  --architecture
 
 
@@ -350,29 +487,41 @@ begin  --architecture
 	--
 	--fifo_1_read_en  <= '1' when ((cpu_address(31 downto 28) = "0011") AND (cpu_address(7 downto 4) = "1000")                         ) else '0';
    --fifo_1_write_en <= '1' when ((cpu_address(31 downto 28) = "0011") AND (cpu_address(7 downto 4) = "1001") AND (write_enable = '1')) else '0';
-	fifo_1_read_en  <= '1' when (cpu_address = x"30000080") AND (cpu_pause    = '0')                         else '0';
-   fifo_1_write_en <= '1' when (cpu_address = x"30000090") AND (cpu_pause    = '0') AND(write_enable = '1') else '0';
+		fifo_1_read_en  <= '1' when (cpu_address = x"30000080") AND (cpu_pause    = '0')                         else '0';
+		fifo_1_write_en <= '1' when (cpu_address = x"30000090") AND (cpu_pause    = '0') AND(write_enable = '1') else '0';
 
-   cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_1_reset <= '1' when (cpu_address = x"40000000") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_1_valid <= '1' when (cpu_address = x"40000004") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_2_reset <= '1' when (cpu_address = x"40000030") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_2_valid <= '1' when (cpu_address = x"40000034") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_3_reset <= '1' when (cpu_address = x"40000060") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_3_valid <= '1' when (cpu_address = x"40000064") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_4_reset <= '1' when (cpu_address = x"40000090") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		cop_4_valid <= '1' when (cpu_address = x"40000094") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   oled_reset <= '1' when (cpu_address = x"400000A0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   oled_valid <= '1' when (cpu_address = x"400000A4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledcharmap_reset <= '1' when (cpu_address = x"400000A0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledcharmap_valid <= '1' when (cpu_address = x"400000A8") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   ctrl_SL_reset <= '1' when (cpu_address = x"400000C0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
-   ctrl_SL_valid <= '1' when (cpu_address = x"400000C4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledterminal_reset <= '1' when (cpu_address = x"400000A4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledterminal_valid <= '1' when (cpu_address = x"400000AC") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
-   enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
+		ctrl_SL_reset <= '1' when (cpu_address = x"400000C0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		ctrl_SL_valid <= '1' when (cpu_address = x"400000C4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
 
+		oledbitmap_reset <= '1' when (cpu_address = x"400000B0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledbitmap_valid <= '1' when (cpu_address = x"400000B8") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		
+		olednibblemap_reset <= '1' when (cpu_address = x"400000B4") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		olednibblemap_valid <= '1' when (cpu_address = x"400000BC") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		
+		oledsigplot_reset <= '1' when (cpu_address = x"400000D0") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+		oledsigplot_valid <= '1' when (cpu_address = x"400000D8") AND (cpu_pause = '0') AND (write_enable = '1') else '0';
+
+		enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
+		
 --   assert cop_4_valid /= '1' severity failure;
 	--
 	-- ON LIT/ECRIT DANS LA MEMOIRE LOCALE UNIQUEMENT LORSQUE LE BUS
@@ -466,9 +615,13 @@ begin  --architecture
       irq_mask_reg, irq_status, gpio0_reg, write_enable,
       cache_checking,
       gpioA_in, counter_reg, cpu_data_w, ram_data_lm,
-		fifo_1_empty, fifo_2_empty, fifo_1_full, fifo_2_full,
-		fifo_1_valid, fifo_2_valid, fifo_1_compteur, fifo_2_compteur, fifo_1_out_data)
+	  fifo_1_empty, fifo_2_empty, fifo_1_full, fifo_2_full,
+	  fifo_1_valid, fifo_2_valid, fifo_1_compteur, fifo_2_compteur, fifo_1_out_data,
+	  oledsigplot_output, oledterminal_output, oledcharmap_output, olednibblemap_output,
+	  oledbitmap_output, cop_1_output, cop_2_output, cop_3_output, cop_4_output,
+	  ctrl_SL_output, buttons_change, buttons_values, data_vga_read)
    begin
+   
       case cpu_address(30 downto 28) is
 
 			-- ON LIT LES DONNEES DE LA MEMOIRE INTERNE
@@ -534,12 +687,38 @@ begin  --architecture
 			when x"40000104" => cpu_data_r <= buttons_change;
 			when others =>
 			 	case cpu_address(7 downto 0) is
-							when "00000100"  => cpu_data_r <= cop_1_output;      -- COPROCESSOR 1 (OUTPUT)
-							when "00110100"  => cpu_data_r <= cop_2_output;      -- COPROCESSOR 2 (OUTPUT)
-							when "01100100"  => cpu_data_r <= cop_3_output;      -- COPROCESSOR 3 (OUTPUT)
-							when "10010100"  => cpu_data_r <= cop_4_output;      -- COPROCESSOR 4 (OUTPUT)
-              when "10100100"  => cpu_data_r <= oled_output;    -- CONTROLLER SWITCH LED (OUTPUT)
-							when "11000100"  => cpu_data_r <= ctrl_SL_output;    -- CONTROLLER SWITCH LED (OUTPUT)
+							when "00000100"  => cpu_data_r <= cop_1_output;      		-- COPROCESSOR 1 (OUTPUT)
+							when "00110100"  => cpu_data_r <= cop_2_output;      		-- COPROCESSOR 2 (OUTPUT)
+							when "01100100"  => cpu_data_r <= cop_3_output;      		-- COPROCESSOR 3 (OUTPUT)
+							when "10010100"  => cpu_data_r <= cop_4_output;      		-- COPROCESSOR 4 (OUTPUT)
+	              			when "10101000"  => 
+	              				cpu_data_r <= oledcharmap_output;   					-- PMOD OLED Charmap (OUTPUT)
+	              				oledcharmap_use <= '1';   								-- PMOD OLED Charmap (PIN OUTPUT ENABLE)
+	              			when "10101100"  =>
+	              				cpu_data_r <= oledterminal_output;   					-- PMOD OLED Terminal (OUTPUT)
+	              				oledterminal_use <= '1';   								-- PMOD OLED Terminal (PIN OUTPUT ENABLE)
+							when "11000100"  =>
+								cpu_data_r <= ctrl_SL_output;    						-- CONTROLLER SWITCH LED (OUTPUT)
+              				when "10111000"  =>
+              					cpu_data_r <= oledbitmap_output;   						-- PMOD OLED Bitmap (OUTPUT)
+              					oledbitmap_use <= '1';   								-- PMOD OLED Bitmap (PIN OUTPUT ENABLE)
+              				when "10111100"  =>
+              					cpu_data_r <= olednibblemap_output;   					-- PMOD OLED Nibblemap (OUTPUT)
+              					olednibblemap_use <= '1';   							-- PMOD OLED Nibblemap (PIN OUTPUT ENABLE)
+              				when "11011000"  =>
+              					cpu_data_r <= oledsigplot_output;   					-- PMOD OLED Sigplot (OUTPUT)
+              					oledsigplot_use <= '1';  								-- PMOD OLED Sigplot (PIN OUTPUT ENABLE)
+--Reset              				
+              				when "10100000"  =>
+	              				oledcharmap_use <= '0';   								-- PMOD OLED Charmap (PIN OUTPUT DISABLE)
+	              			when "10100100"  =>
+	              				oledterminal_use <= '0';   								-- PMOD OLED Terminal (PIN OUTPUT DISENABLE)
+							when "10110000"  =>
+              					oledbitmap_use <= '0';   								-- PMOD OLED Bitmap (PIN OUTPUT DISENABLE)
+              				when "10110100"  =>
+              					olednibblemap_use <= '0';   							-- PMOD OLED Nibblemap (PIN OUTPUT DISENABLE)
+              				when "11010000"  =>
+              					oledsigplot_use <= '0';  								-- PMOD OLED Sigplot (PIN OUTPUT DISENABLE) 	
 							when others =>	 cpu_data_r <= x"FFFFFFFF";
 			 	end case;
 		end case;
@@ -669,8 +848,8 @@ begin  --architecture
          clock          => clk,
          reset        => reset,
          buttons_access => enable_buttons,
-	 btnC => btnC,
-	 btnU => btnU,
+	 	 btnC => btnC,
+	 	 btnU => btnU,
          btnD => btnD,
          btnL => btnL,
          btnR => btnR,
@@ -760,14 +939,14 @@ begin  --architecture
 				dma_data_read <= ram_data_lm;
 			when "010" =>         --misc
          	case dma_address(6 downto 4) is
-         		when "000" =>  dma_data_read <= ZERO(31 downto 8) & data_read_uart;
-        		 	when "001" =>  dma_data_read <= ZERO(31 downto 8) & irq_mask_reg;
-         		when "010" =>  dma_data_read <= ZERO(31 downto 8) & irq_status;
-         		when "011" =>  dma_data_read <= gpio0_reg;
-         		when "101" =>  dma_data_read <= gpioA_in;
-         		when "110" =>  dma_data_read <= counter_reg;
+		     		when "000" =>  dma_data_read <= ZERO(31 downto 8) & data_read_uart;
+		    		when "001" =>  dma_data_read <= ZERO(31 downto 8) & irq_mask_reg;
+		     		when "010" =>  dma_data_read <= ZERO(31 downto 8) & irq_status;
+		     		when "011" =>  dma_data_read <= gpio0_reg;
+		     		when "101" =>  dma_data_read <= gpioA_in;
+		     		when "110" =>  dma_data_read <= counter_reg;
 					when others =>	dma_data_read <= x"FFFFFFFF";
-				end case;
+			end case;
 			when "011" =>
          	case dma_address(7 downto 4) is
 					when "0000"  => dma_data_read <= ZERO(31 downto 1) & fifo_1_empty;
@@ -837,50 +1016,153 @@ begin  --architecture
 
 -- Controller Switchs/Leds
 	plasma_ctrl_SL: ctrl_SL port map (
-		clock			     => clk,
-		reset			     => ctrl_SL_reset,
-		INPUT_1		     => cpu_data_w,
-		INPUT_1_valid	 => ctrl_SL_valid,
-		OUTPUT_1		   => ctrl_SL_output,
-		SW				     => sw,
-		LED				     => led,
-		RGB1_Red		   => RGB1_Red,
-		RGB2_Red		   => RGB2_Red,
-		RGB1_Green	   => RGB1_Green,
-		RGB2_Green		 => RGB2_Green,
-		RGB1_Blue		   => RGB1_Blue,
-		RGB2_Blue		   => RGB2_Blue
+		clock			=> clk,
+		reset			=> ctrl_SL_reset,
+		INPUT_1		    => cpu_data_w,
+		INPUT_1_valid	=> ctrl_SL_valid,
+		OUTPUT_1		=> ctrl_SL_output,
+		SW				=> sw,
+		LED				=> led,
+		RGB1_Red		=> RGB1_Red,
+		RGB2_Red		=> RGB2_Red,
+		RGB1_Green	   	=> RGB1_Green,
+		RGB2_Green		=> RGB2_Green,
+		RGB1_Blue		=> RGB1_Blue,
+		RGB2_Blue		=> RGB2_Blue
 	);
 
 
-  -- OLED
-  	plasma_oled: PmodOLEDrgb_charmap
-    Generic map(CLK_FREQ_HZ => CLK_FREQ_HZ,
-                PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
-                LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+  -- OLED Charmap
+  	plasma_oledcharmap: PmodOLEDrgb_charmap
+	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+            		PARAM_BUFF  => True,            	-- necessary because we connect CPU bus directly and there is no solution to get it buffered
+              		LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
 
-     port map (
+   	port map (
   		clk          => clk,
-      reset        => oled_reset,
+      	reset        => oledcharmap_reset,
 
-      char_write   => oled_valid,
-      char_col     => cpu_data_w( 19 downto 16 ),
-      char_row     => cpu_data_w( 10 downto 8 ),
-      char         => cpu_data_w( 7 downto 0 ),
-      ready        => oled_output(0),
+      	char_write   => oledcharmap_valid,
+      	char_col     => cpu_data_w(19 downto 16),
+      	char_row     => cpu_data_w(10 downto 8),
+      	char         => cpu_data_w(7 downto 0),
+      	ready        => oledcharmap_output(0),
 
-      --scroll_up    => cpu_data_w(26),
-      --row_clear    => cpu_data_w(25),
-      screen_clear => cpu_data_w(24),
+      	scroll_up    => cpu_data_w(26),
+      	row_clear    => cpu_data_w(25),
+      	screen_clear => cpu_data_w(24),
 
-      PMOD_CS      => OLED_PMOD_CS,
-      PMOD_MOSI    => OLED_PMOD_MOSI,
-      PMOD_SCK     => OLED_PMOD_SCK,
-      PMOD_DC      => OLED_PMOD_DC,
-      PMOD_RES     => OLED_PMOD_RES,
-      PMOD_VCCEN   => OLED_PMOD_VCCEN,
-      PMOD_EN      => OLED_PMOD_EN
+	  	PMOD_CS      => oledcharmap_pinout(0),
+      	PMOD_MOSI    => oledcharmap_pinout(1),
+        PMOD_SCK     => oledcharmap_pinout(2),
+        PMOD_DC      => oledcharmap_pinout(3),
+        PMOD_RES     => oledcharmap_pinout(4),
+        PMOD_VCCEN   => oledcharmap_pinout(5),
+        PMOD_EN      => oledcharmap_pinout(6)
   	);
+
+
+    -- OLED Terminal
+    plasma_oledterminal: PmodOLEDrgb_terminal
+	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+                  	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+
+	port map (
+    	clk          => clk,
+        reset        => oledterminal_reset,
+
+        char_write   => oledterminal_valid,
+        char         => cpu_data_w(7 downto 0),
+        ready        => oledterminal_output(0),
+        screen_clear => cpu_data_w(24),
+
+	    PMOD_CS      => oledterminal_pinout(0),
+        PMOD_MOSI    => oledterminal_pinout(1),
+        PMOD_SCK     => oledterminal_pinout(2),
+        PMOD_DC      => oledterminal_pinout(3),
+        PMOD_RES     => oledterminal_pinout(4),
+        PMOD_VCCEN   => oledterminal_pinout(5),
+        PMOD_EN      => oledterminal_pinout(6)
+    );
+
+
+      -- OLED Bitmap
+	plasma_oledbitmap: PmodOLEDrgb_bitmap
+	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+                    BPP         => BPP,
+                    GREYSCALE   => GREYSCALE,
+                    LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+
+	port map (
+      	clk          => clk,
+       	reset        => oledbitmap_reset,
+
+       	pix_write    => oledbitmap_valid,
+    	pix_col      => cpu_data_w(6 downto 0),
+      	pix_row      => cpu_data_w(13 downto 8),
+     	pix_data_in  => cpu_data_w(((BPP-1)+16) downto 16),
+    	pix_data_out => oledbitmap_output(BPP-1 downto 0),
+
+      	PMOD_CS      => oledbitmap_pinout(0),
+  		PMOD_MOSI    => oledbitmap_pinout(1),
+       	PMOD_SCK     => oledbitmap_pinout(2),
+    	PMOD_DC      => oledbitmap_pinout(3),
+       	PMOD_RES     => oledbitmap_pinout(4),
+     	PMOD_VCCEN   => oledbitmap_pinout(5),
+       	PMOD_EN      => oledbitmap_pinout(6)
+        );
+
+
+      -- OLED Nibble
+	plasma_olednibble: PmodOLEDrgb_nibblemap
+    Generic map (		CLK_FREQ_HZ => CLK_FREQ_HZ,
+                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+                  	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+    Port map (clk          => clk,
+       	  reset        => olednibblemap_reset,
+          
+          nibble_write => olednibblemap_valid,
+          nibble_col   => cpu_data_w(3 downto 0),
+          nibble_row   => cpu_data_w(10 downto 8),
+          nibble       => cpu_data_w(19 downto 16),
+          ready        => olednibblemap_output(0),
+          
+          PMOD_CS      => olednibblemap_pinout(0),
+  		  PMOD_MOSI    => olednibblemap_pinout(1),
+       	  PMOD_SCK     => olednibblemap_pinout(2),
+    	  PMOD_DC      => olednibblemap_pinout(3),
+       	  PMOD_RES     => olednibblemap_pinout(4),
+     	  PMOD_VCCEN   => olednibblemap_pinout(5),
+       	  PMOD_EN      => olednibblemap_pinout(6)
+          );
+
+
+      -- OLED Sigplot
+	plasma_sigplot: PmodOLEDrgb_sigplot
+    Generic map (	CLK_FREQ_HZ => CLK_FREQ_HZ,
+                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+                  	LEFT_SIDE   => LEFT_SIDE,
+                  	MAX_ON_TOP => MAX_ON_TOP)           
+    Port map (
+    	  clk          => clk,
+       	  reset        => oledsigplot_reset,
+       	  
+          sample       => cpu_data_w(5 downto 0),
+          sample_en    => oledsigplot_valid,
+          sample_num   => cpu_data_w(9 downto 8),      
+          disp_shift   => '0',
+          
+          ready        => oledsigplot_output(0),
+          
+          PMOD_CS      => oledsigplot_pinout(0),
+  		  PMOD_MOSI    => oledsigplot_pinout(1),
+       	  PMOD_SCK     => oledsigplot_pinout(2),
+    	  PMOD_DC      => oledsigplot_pinout(3),
+       	  PMOD_RES     => oledsigplot_pinout(4),
+     	  PMOD_VCCEN   => oledsigplot_pinout(5),
+       	  PMOD_EN      => oledsigplot_pinout(6)
+          );
 
 --	u5d_coproc: entity WORK.coproc_3 port map(-- atention 2x coproc 3
 --         clock          => clk,
@@ -904,5 +1186,20 @@ begin  --architecture
 --		VGA_blue => VGA_blue
 --	);
 
-
+		
+		oled_pinout <= 	oledcharmap_pinout when oledcharmap_use='1' and oledbitmap_use='0' and oledterminal_use='0' and olednibblemap_use='0' and oledsigplot_use='0' else 
+         				oledbitmap_pinout when oledcharmap_use='0' and oledbitmap_use='1' and oledterminal_use='0' and olednibblemap_use='0' and oledsigplot_use='0' else
+         				oledterminal_pinout when oledcharmap_use='0' and oledbitmap_use='0' and oledterminal_use='1' and olednibblemap_use='0' and oledsigplot_use='0' else
+         				oledterminal_pinout when oledcharmap_use='0' and oledbitmap_use='0' and oledterminal_use='0' and olednibblemap_use='1' and oledsigplot_use='0' else
+         				oledterminal_pinout when oledcharmap_use='0' and oledbitmap_use='0' and oledterminal_use='0' and olednibblemap_use='0' and oledsigplot_use='1' else
+         				(others => '0');
+		
+		OLED_PMOD_CS    <= oled_pinout(0);
+		OLED_PMOD_MOSI  <= oled_pinout(1);
+		OLED_PMOD_SCK   <= oled_pinout(2);
+		OLED_PMOD_DC    <= oled_pinout(3);
+		OLED_PMOD_RES   <= oled_pinout(4);
+		OLED_PMOD_VCCEN <= oled_pinout(5);
+		OLED_PMOD_EN    <= oled_pinout(6);
+		
 end; --architecture logic
