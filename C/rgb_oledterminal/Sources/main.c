@@ -40,7 +40,7 @@ int main( int argc, char ** argv ) {
 
 	int i = 0;
 	char buffer[128] =  "                "
-						"                "
+                      	"                "
 						"                "
 	                    " Terminal Module"
 	                    "     Working    "
@@ -49,16 +49,16 @@ int main( int argc, char ** argv ) {
 	                    "                ";
 
 // Reset the oled_rgb PMOD
-	MemoryWrite(OLEDTERMINAL_RST, 1); 					
+	MemoryWrite(OLEDTERMINAL_RST, 1);
 
 // Screen Clear (Black Background by defaulf)
-	while(!MemoryRead(OLEDTERMINAL_RW)) {}				
+	while(!MemoryRead(OLEDTERMINAL_RW)) {}
 		MemoryWrite(OLEDTERMINAL_RW, 0x01000000);
 
 
 // Buffer Print
   	for (i = 0; i < bufferLenght(buffer); i++) {
-    	while(!MemoryRead(OLEDTERMINAL_RW)) {} 
+    	while(!MemoryRead(OLEDTERMINAL_RW)) {}
 	   		MemoryWrite(OLEDTERMINAL_RW, buffer[i]);
   	}
 

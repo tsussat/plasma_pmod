@@ -1,6 +1,6 @@
+
 /*
 This code can be used to control the Switchs and the LEDs (RGB and little green LEDs).
-
 File: main.c
 Author: Igor Papandinas
 Last Update: 17/01/2018
