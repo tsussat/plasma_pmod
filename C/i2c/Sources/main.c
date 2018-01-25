@@ -156,7 +156,7 @@ int receive_data(unsigned int *buf, unsigned int buf_len) {
 int main(int argc, char const *argv[]) {
 
   unsigned int data;
-  unsigned char buf[6];
+  unsigned int buf[6];
 
   short x, y, z;
 
@@ -193,14 +193,23 @@ int main(int argc, char const *argv[]) {
     receive_data(&buf, 6); // Six readings
     stop();
 
-    x = (buf[0] << 8) + buf[1];
-    y = (buf[2] << 8) + buf[3];
-    z = (buf[4] << 8) + buf[5];
+    x = (short) (buf[0] << 8) + buf[1];
+    y = (short) (buf[2] << 8) + buf[3];
+    z = (short) (buf[4] << 8) + buf[5];
 
     start();
     adress_send(SLAVE_ADDRESS_CMPS, WRITE);
     send_data(0x03); // First data register pointer
     stop();   
+
+    puts("x: ");
+    print_int((int) x);
+
+    puts("y: ");
+    print_int((int) y);
+
+    puts("z: ");
+    print_int((int) z);
 
     sleep(100000); // 100ms
 
