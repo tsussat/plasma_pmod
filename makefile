@@ -1,4 +1,4 @@
-# Makefile permettant de :
+$# Makefile permettant de :
 # - compiler le code source à exécuter sur le Plasma
 # - compiler les fichiers VHDL du SoC Plasma
 # - lancer la simulation VHDL du SoC Plasma
@@ -16,10 +16,15 @@
 #MY_PROJECT=filtre_no_fifo
 #MY_PROJECT=tuto_plasma
 #MY_PROJECT=mandelbrot
-#MY_PROJECT=boot_loader
+MY_PROJECT=boot_loader
 #MY_PROJECT=hello
 #MY_PROJECT=switch_led
-MY_PROJECT=rgb_oled
+#MY_PROJECT=rgb_oledcharmap
+#MY_PROJECT=rgb_oledterminal
+#MY_PROJECT=rgb_oledbitmap
+#MY_PROJECT=rgb_olednibblemap
+#MY_PROJECT=rgb_oledsigplot
+#MY_PROJECT=app
 
 SRC_DIR=Sources
 INC_DIR=Includes
