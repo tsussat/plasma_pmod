@@ -1,14 +1,17 @@
 # Documentation
 
-![Plasma](SRC/plasma.gif)
-
+<p align="center">
+  <img src="SRC/plasma.gif">
+</p>
 
 ## Introduction
 Cette documentation a pour objectif de détailler le principe de fonctionnement de l'architecture du processeur Plasma lors de son utilisation avec divers PMODs. Ce processeur a été instancié sur une puce FPGA *Artix 7* embarquée sur carte *NEXYS 4*. Il est basé sur une architecture RISC 32-bit softcore et est issu d'un projet open source: [**Plasma**](http://opencores.org/project,plasma). L'utilisation des PMODs repose sur une interface plus flexible codée en C et faisant abstraction du langage de description VHDL.
 
 Ce travail a été réalisé dans le cadre d'un projet proposé par Camille Leroux en option SE et développé par Paul Kocialcowski, Henri Gouttard et Igor Papandinas.
 
-![Architecture](SRC/architecture.gif)
+<p align="center">
+  <img src="SRC/architecture.gif">
+</p>
 
 ## Prérequis
 Ci-dessous sont listé les outils requis pour l'utilisation du processeur Plasma et les PMODs ou bien l'ajout de nouveaux.
@@ -32,7 +35,9 @@ Les outils nécessaire pour l'ajout de nouveaux PMODs au processeur Plasma sont 
 
 ### PMOD Oled-RGB
 
-![OledRGB](SRC/OledRGB.png)
+<p align="center">
+  <img src="SRC/OLEDrgb.png">
+</p>
 
 Le PMOD Oled-RGB permet l'affichage de caractères ASCII sous 8 lignes X 16 colonnes. Il permet aussi de réalisé un affichage Bitmap sous 96X64 avec 16 bits/pixel. Un module d'affichage de jusqu'à 4 courbes a également été instancié (non testé encore).
 L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bornat détaillé à l'adresse suivante: http://bornat.vvv.enseirb.fr/wiki/doku.php?id=en202:pmodoledrgb.
