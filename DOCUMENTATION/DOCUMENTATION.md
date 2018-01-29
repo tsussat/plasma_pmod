@@ -8,7 +8,7 @@ Cette documentation a pour objectif de détailler le principe de fonctionnement 
 
 Ce travail a été réalisé dans le cadre d'un projet proposé par Camille Leroux en option SE et développé par Paul Kocialcowski, Henri Gouttard et Igor Papandinas.
 
-![Architecture](SRC/plasma.gif)
+![Architecture](SRC/architecture.gif)
 
 ## Prérequis
 Ci-dessous sont listé les outils requis pour l'utilisation du processeur Plasma et les PMODs ou bien l'ajout de nouveaux.
@@ -32,7 +32,7 @@ Les outils nécessaire pour l'ajout de nouveaux PMODs au processeur Plasma sont 
 
 ### PMOD Oled-RGB
 
-![OledRGB](SRC/plasma.gif)
+![OledRGB](SRC/OledRGB.png)
 
 Le PMOD Oled-RGB permet l'affichage de caractères ASCII sous 8 lignes X 16 colonnes. Il permet aussi de réalisé un affichage Bitmap sous 96X64 avec 16 bits/pixel. Un module d'affichage de jusqu'à 4 courbes a également été instancié (non testé encore).
 L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bornat détaillé à l'adresse suivante: http://bornat.vvv.enseirb.fr/wiki/doku.php?id=en202:pmodoledrgb.
