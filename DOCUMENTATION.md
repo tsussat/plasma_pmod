@@ -1,3 +1,3 @@
 # Documentation
 
-![Showcase](http://plasmacpu.no-ip.org/binary/plasma.gif)
+![Plasma](http://plasmacpu.no-ip.org/binary/plasma.gif)
