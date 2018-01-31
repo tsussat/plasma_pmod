@@ -64,7 +64,6 @@
 --   0x40000104  Buttons controller change
 
 --   0x40000200  Seven segment display input
---   0x40000204  Seven segment display reset
 
 --   0x80000000  DMA ENGINE (NOT WORKING YET)
 ---------------------------------------------------------------------
@@ -179,7 +178,6 @@ architecture logic of plasma is
    signal enable_vga_read   : std_logic;
    signal enable_vga_write  : std_logic;
    signal ctrl_7seg_valid   : std_logic;
-   signal ctrl_7seg_reset   : std_logic;
 
    signal ctrl_SL_reset     : std_logic;
    signal ctrl_SL_valid	    : std_logic;
@@ -379,7 +377,6 @@ begin  --architecture
    enable_buttons <= '1' when (cpu_address = x"40000100" or cpu_address = x"40000104") AND (cpu_pause = '0') else '0';
 
    ctrl_7seg_valid <= '1' when (cpu_address = x"40000200") AND (cpu_pause = '0') else '0';
-   ctrl_7seg_reset <= '1' when (cpu_address = x"40000204") AND (cpu_pause = '0') else '0';
 
 --   assert cop_4_valid /= '1' severity failure;
 	--
@@ -848,7 +845,7 @@ begin  --architecture
 
   ctrl_7seg1: entity WORK.ctrl_7seg port map(
       clock          => clk,
-      reset          => ctrl_7seg_reset,
+      reset          => reset,
       INPUT_1        => cpu_data_w,
       INPUT_1_valid  => ctrl_7seg_valid,
       OUTPUT_7s      => seg,
