@@ -29,9 +29,11 @@ Schéma du bloc principal **ctrl_7seg.vhd** :
 
 Comment ça fonctionne ?
 -----------------------
-
+Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bits et elle sera affichée en sortie, en écriture héxadécimal, sur les 8 afficheurs sept-segments disponibles sur la Nexys 4.
 
 
 Programme C :
 -------------
-Un programme d'exemple est fournit, il implémente un compteur allant de `0` à `2000` (`7DO` en hexadécimal). L'affichage est fait sur les afficheurs sept-segment en hexadécimal.
+Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
+
+Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.

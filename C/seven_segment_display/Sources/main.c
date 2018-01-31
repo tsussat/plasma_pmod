@@ -8,7 +8,7 @@
 void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes 
 {	// la fréquence d'horloge vaut 25 MHz
 	unsigned int t0 = MemoryRead( TIMER_ADR  );
-	while ( MemoryRead( TIMER_ADR  ) - t0 < 2500*ms ) // On compte 2500 période pour 1 ms
+	while ( MemoryRead( TIMER_ADR  ) - t0 < 2500*ms ) // On compte 2500 périodes pour 1 ms
 		;
 }
 
@@ -19,7 +19,7 @@ int main(int argc, char ** argv) {
 	for (i = 0; i< 2000; i++)
 	{
 		MemoryWrite(SEVEN_SEGMENT_BASE, i);
-		sleep(5000);
+		sleep(100); // 100ms
 	}
 
 
