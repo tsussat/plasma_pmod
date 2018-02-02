@@ -8,13 +8,15 @@
 - [Prérequis](#prerequis)
 	- [Configuration](#configuration)
 	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
+- [Manuel d'utilisation des périphériques sur la carte NEXYS 4](#manuel-dutilisation-des-peripheriques-sur-la-carte-nexys-4)
+  - [Afficheur sept segments](#afficheur-sept-segments)
+  - [Switchs & LEDs](#switchs-&-leds)
+- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
 - [Manuel d'utilisation de certains PMODs](#manuel-dutilisation-de-certains-pmods)
 	- [PMOD Oled-RGB: ](#pmod-oled-rgb)
 		- [Module Charmap](#module-charmap)
 		- [Module Terminal](#module-terminal)
 		- [Module Bitmap](#module-bitmap)
-	- [Afficheur sept segments](#afficheur-sept-segments)
-	- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
 
 
 ## Introduction
@@ -117,6 +119,39 @@ Un programme d'exemple est fournit dans le fichier *main.c* du répertoire *C/sw
 
 **[`^        back to top        ^`](#)**
 
+## Module de gestion de l'I2C
+
+Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
+- Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge.
+- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
+
+### Fichiers sources
+
+Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
+- `i2c.vhd` bloc principal qui contient deux entités **i2c_clock** et **i2c_controller**.
+- `i2c.h` fichier d'entête que contient les prototype des fonctions nécessaires pour l'établissement d'une communication *I2C*, ainsi que les macros des adresses et masques des  différents registres.
+- `i2c.c` fichier C qui contient les fonctions qui permette de gérer les séquences d'écriture et de lecture du protocole *I2C*.
+
+*NB: Le fichier `main.c` contient un programme d'exemple qui gère une communication avec le capteur PMOD compass*
+
+### Schéma des blocs de la partie VHDL du module *I2C*
+
+<p align="center">
+  <img src="SRC/i2cbloc.png">
+</p>
+
+### Adresses associées au module
+
+- `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
+- `0x40000304`: adresse du registre de status du module *I2C*.
+- `0x40000308`: adresse du registre de contrôle du module *I2C*.
+- `0x4000030c`: adresse du registre de données du module *I2C*.
+
+L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
+
+**[`^        back to top        ^`](#)**
+
 
 ## Manuel d'utilisation de certains PMODs
 
@@ -180,40 +215,5 @@ L'allure de la trame à envoyer est la suivante:
 On peut cependant raccourcir à 8 bits la trame de la valeur de la couleur du pixel en modifiant la valeur de BPP dans la description VHDL (*plasma.vhd*). Cette valeur correspond à la profondeur colorimétrique et elle est définit par défaut à 16 bpp ce qui équivaut au mode *Highcolor*.
 
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledbitmap/Sources/*.
-
-**[`^        back to top        ^`](#)**
-
-
-
-### Module de gestion de l'I2C
-
-Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
-- Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge.
-- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
-
-#### Fichiers sources
-
-Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
-- `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
-- `i2c.vhd` bloc principal qui contient deux entités **i2c_clock** et **i2c_controller**.
-- `i2c.h` fichier d'entête que contient les prototype des fonctions nécessaires pour l'établissement d'une communication *I2C*, ainsi que les macros des adresses et masques des  différents registres.
-- `i2c.c` fichier C qui contient les fonctions qui permette de gérer les séquences d'écriture et de lecture du protocole *I2C*.
-
-*NB: Le fichier `main.c` contient un programme d'exemple qui gère une communication avec le capteur PMOD compass*
-
-#### Schéma des blocs de la partie VHDL du module *I2C*
-
-<p align="center">
-  <img src="SRC/i2cbloc.png">
-</p>
-
-#### Adresses associées au module
-
-- `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
-- `0x40000304`: adresse du registre de status du module *I2C*.
-- `0x40000308`: adresse du registre de contrôle du module *I2C*.
-- `0x4000030c`: adresse du registre de données du module *I2C*.
-
-L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
 
 **[`^        back to top        ^`](#)**
