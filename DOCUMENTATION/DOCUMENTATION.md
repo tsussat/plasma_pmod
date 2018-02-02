@@ -8,6 +8,7 @@
 - [Prérequis](#prerequis)
 	- [Configuration](#configuration)
 	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
+	- [Makefile](#makefile)
 - [Manuel d'utilisation des périphériques sur la carte NEXYS 4](#manuel-dutilisation-des-peripheriques-sur-la-carte-nexys-4)
   - [Afficheur sept segments](#afficheur-sept-segments)
   - [Switchs & LEDs](#switchs-&-leds)
@@ -93,6 +94,8 @@ Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 
 
 **[`^        back to top        ^`](#)**
 
+-----------------
+
 ### Switchs & LEDs
 La carte NEXYS 4 possède 16 Switchs, 16 LEDs vertes et 2 LEDs RGB. Ce module permet de contrôler l'ensemble. Il est possible d'intéragir avec le plasma et d'obtenir un retour d'information sur ces LEDs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des Switchs/LEDs est semblable aux blocs coprocesseur présents dans le PLASMA.
 #### Fichiers VHDL
@@ -168,6 +171,8 @@ Chaque module possède une adresse d'activation sur un bit (*oledXXXXXX_valid*) 
 
 **[`^        back to top        ^`](#)**
 
+-----------------
+
 #### Module Charmap
 Le module **Charmap** permet l'affichage sur l'écran Oled-RGB d'un caractère ASCII à une position donnée (ligne et colone).
 Ce module du PMOD Oled-RGB est adressable aux adresses suivantes:
@@ -186,6 +191,8 @@ Pour faciliter l'écriture de la trame à envoyé, une fonction printCar() a ét
 
 **[`^        back to top        ^`](#)**
 
+-----------------
+
 #### Module Terminal
 Le module **Terminal** permet l'affichage sur l'écran Oled-RGB de caractères ASCII en prenant en charge la position. Il est donc plus adapté que le module *Charmap* pour écrire un buffer contenant plusieurs caractères.
 Ce module du PMOD Oled-RGB utilise le précedent module *Charmap* et est adressable aux adresses suivantes:
@@ -201,6 +208,8 @@ L'allure de la trame à envoyer est la suivante:
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledterminal/Sources/*.
 
 **[`^        back to top        ^`](#)**
+
+-----------------
 
 #### Module Bitmap
 Le module **Bitmap** du PMOD Oled-RGB est adressable aux adresses suivantes:
