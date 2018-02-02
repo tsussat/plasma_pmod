@@ -7,7 +7,7 @@
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
 
-//Function used to print the caracter 'car' at a given position (row, col)
+//Function used to color a pixel at a given position (row, col)
 void printPixel(char row, char col, int color) {
 	int buff = 0x00000000;
 
@@ -23,7 +23,7 @@ int main(int argc, char ** argv) {
 
 	MemoryWrite(OLEDBITMAP_RST, 1); // Reset the oled_rgb PMOD
 
-	'O'
+	// 'O'
 	printPixel(25, 32, 0xF800);
 	printPixel(25, 33, 0xF800);
 	printPixel(25, 34, 0xF800);
@@ -49,7 +49,7 @@ int main(int argc, char ** argv) {
 	printPixel(30, 36, 0xF800);
 	
 	
-	'K'
+	// 'K'
 	printPixel(25, 42, 0x07C0);	
 	printPixel(26, 42, 0x07C0);
 	printPixel(27, 42, 0x07C0);
@@ -69,7 +69,7 @@ int main(int argc, char ** argv) {
 	printPixel(31, 47, 0x07C0);
 	
 	
-	'!'
+	// '!'
 	printPixel(25, 53, 0x001F);	
 	printPixel(26, 53, 0x001F);
 	printPixel(27, 53, 0x001F);
