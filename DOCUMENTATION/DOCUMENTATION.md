@@ -10,10 +10,10 @@
 	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
 - [Manuel d'utilisation de certains PMODs](#manuel-dutilisation-de-certains-pmods)
 	- [PMOD Oled-RGB](#pmod-oled-rgb)
-    - [Module Charmap](#module-charmap)
-    - [Module Terminal](#module-terminal)
-    - [Module Bitmap](#module-bitmap)
-	- [Afficheur sept segments](#afficheur-sept-segments)
+    		- [Module Charmap](#module-charmap)
+    		- [Module Terminal](#module-terminal)
+    		- [Module Bitmap](#module-bitmap)
+    	- [Afficheur sept segments](#afficheur-sept-segments)
 	- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
 
 
