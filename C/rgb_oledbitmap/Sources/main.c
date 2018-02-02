@@ -7,58 +7,27 @@
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
 
-//Calculation of x^y
-int pow(int x, int y) {
-
-	int result, i =0;
-	
-	result = x;
-	
-	for(i = 0; i < y; i++)
-		result = result * x;
-	
-	return result;
-}
-
-//Function to convert a decimal number to its hexadecimal expression
-int decimal_to_hexadecimal(int x)
-{
-      int hexadecimal_number, remainder, count = 0;
-      for(count = 0; x > 0; count++)
-      {
-            remainder = x % 16;
-            hexadecimal_number = hexadecimal_number + remainder * pow(10,count);
-            x = x / 16;
-      }
-      return hexadecimal_number;
-}
-
 //Function used to print the caracter 'car' at a given position (row, col)
-void printPixel(int row, int col, int color) {
+void printPixel(char row, char col, int color) {
 	int buff = 0x00000000;
-	int rowConvert = 0;
-	int colConvert = 0;
-	
-	rowConvert = decimal_to_hexadecimal(row);
-	colConvert = decimal_to_hexadecimal(col);
 
 	buff = color;
-	buff = (buff << 8) | rowConvert;
-	buff = (buff << 8) | colConvert;
+	buff = (buff << 8) | row;
+	buff = (buff << 8) | col;
 
 	MemoryWrite(OLEDBITMAP_RW, buff);
 }
 
 
-int main( int argc, char ** argv ) {
+int main(int argc, char ** argv) {
 
-	MemoryWrite( OLEDBITMAP_RST, 1 ); // Reset the oled_rgb PMOD
+	MemoryWrite(OLEDBITMAP_RST, 1); // Reset the oled_rgb PMOD
 
 	printPixel(25, 32, 0xF800);
 	printPixel(25, 33, 0xF800);
-	printPixel(25, 33, 0xF800);
-	printPixel(25, 33, 0xF800);
-	printPixel(25, 33, 0xF800);
+	printPixel(25, 34, 0xF800);
+	printPixel(25, 35, 0xF800);
+	printPixel(25, 36, 0xF800);
 
 /*
 	MemoryWrite(OLEDBITMAP_RW, 0xF8001920);
