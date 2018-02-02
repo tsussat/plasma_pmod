@@ -7,12 +7,12 @@
 - [Introduction](#introduction)
 - [Prérequis](#prerequis)
 	- [Configuration](#configuration)
-	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)	
+	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
 - [Manuel d'utilisation de certains PMODs](#manuel-dutilisation-de-certains-pmods)
 	- [PMOD Oled-RGB: ](#pmod-oled-rgb)
 		- [Module Charmap](#module-charmap)
 		- [Module Terminal](#module-terminal)
-		- [Module Bitmap](#module-bitmap)	
+		- [Module Bitmap](#module-bitmap)
 	- [Afficheur sept segments](#afficheur-sept-segments)
 	- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
 
@@ -34,6 +34,8 @@ Les outils nécessaire pour l'utilisation du processeur Plasma avec les PMODs so
   * Une carte de développement *NEXYS 4* pour y instancier le plasma et autres modules à utiliser.
   * Le logiciel `Vivado` pour le chargement du bitstream.
 
+**[`^        back to top        ^`](#)**
+
 ### Ajout de nouveaux PMODs
 Les outils nécessaires pour l'ajout de nouveaux PMODs au processeur Plasma sont les suivants:
   * Les outils cross-compilés pour une architecture MIPS-elf: `mips-elf-gcc`, `mips-elf-as`, `mips-elf-ld`.
@@ -50,6 +52,71 @@ Ensuite il faut compiler l'ensemble à partir du *Makefile* dans le répertoire 
 Pour terminer, si l'ensemble des instructions précédentes ont bien été suivi, il est maintenant possible d'intéragir dans un programme en C avec le PMOD à partir des adresses utilisées et des fonctions *MemoryWrite()* et *MemoryRead()* (cf les exemples donnés ci-dessous pour d'autres modules tel que le module *Charmap* du PMOD Oled-RGB).
 
 **[`^        back to top        ^`](#)**
+
+### Makefile
+
+**[`^        back to top        ^`](#)**
+
+## Manuel d'utilisation des périphériques sur la carte NEXYS 4
+
+### Afficheur sept segments
+La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
+
+#### Fichiers VHDL
+Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc de gestion de l'afficheur sept segments, les entrées/sorties et signaux pilotant le bloc y sont cablés.
+- `ctrl_7seg.vhd` bloc principal où les différents sous-blocs nécessaires à l'affichage sont cablés.
+- `mod_7seg.vhd`
+- `mux_7seg.vhd`
+
+#### Adresse associée au module
+Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
+- `0x40000200`: adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `SEVEN_SEGMENT`.
+
+
+#### Schéma du bloc principal **ctrl_7seg.vhd**
+<p align="center">
+  <img src="SRC/ctrl_7seg.png" width="400px">
+</p>
+
+
+#### Comment ça fonctionne ?
+Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bits et elle sera affichée en sortie, en écriture héxadécimal, sur les 8 afficheurs sept-segments disponibles sur la Nexys 4.
+
+
+#### Programme C
+Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
+
+Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.
+
+**[`^        back to top        ^`](#)**
+
+### Switchs & LEDs
+La carte NEXYS 4 possède 16 Switchs, 16 LEDs vertes et 2 LEDs RGB. Ce module permet de contrôler l'ensemble. Il est possible d'intéragir avec le plasma et d'obtenir un retour d'information sur ces LEDs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des Switchs/LEDs est semblable aux blocs coprocesseur présents dans le PLASMA.
+#### Fichiers VHDL
+Les différents fichiers VHDL qui décrivent la gestion des Switchs/LEDs sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc de gestion, les entrées/sorties et signaux pilotant le bloc y sont cablés.
+- `ctrl_SL.vhd` bloc principal où les différents sous-blocs nécessaires à l'affichage sont cablés.
+
+#### Adresse associée au module
+Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
+- `0x400000C4`: adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `CTRL_SL_RW`.
+
+
+#### Schéma du bloc principal **ctrl_SL.vhd**
+<p align="center">
+  <img src="SRC/ctrl_SL.png" width="400px">
+</p>
+
+#### Comment ça fonctionne ?
+Il suffit d'enclencher un switch pour allumer la LED verte correspondante au dessus. Un décalage de 16 bits est fait sur la valeur des switchs, ainsi on contrôle les LEDs RGB avec les switchs 1 à 6 (correspondant après décalage au bit 17 à 22). On peut récupérer la valeur des Switchs pour contrôler d'autres PMODs et on peut également écrire à l'adresse `CTRL_SL_RW`, la valeur en entrée sur 32 bits qui affectera l'état des LEDs verte (sur les bits de poids faible 1 à 16) et RGB.
+
+
+#### Programme C
+Un programme d'exemple est fournit dans le fichier *main.c* du répertoire *C/switch_led/Sources/*. Ce programme implémente le contrôle des LEDs à partir des switchs. Cela est fait à partir d'une boucle infinie qui lit et affiche sur le port série l'état des switchs et contrôle l'état des LEDs.
+
+**[`^        back to top        ^`](#)**
+
 
 ## Manuel d'utilisation de certains PMODs
 
@@ -72,7 +139,7 @@ Ce module du PMOD Oled-RGB est adressable aux adresses suivantes:
   * READ/WRITE: OLEDCHARMAP_RW    --> 0x400000A8
   * RESET:      OLEDCHARMAP_RST   --> 0x400000A0
 
-Avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Charmap*. Ainsi on lit à l'adresse *OLEDCHARMAP_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
+Avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Charmap*. Ainsi on lit à l'adresse définit par le macro *OLEDCHARMAP_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
 Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDCHARMAP_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
 L'allure de la trame à envoyer est la suivante:
   * la valeur hexadecimal du caractère sur les bits 7 à 0.
@@ -90,7 +157,7 @@ Ce module du PMOD Oled-RGB utilise le précedent module *Charmap* et est adressa
   * READ/WRITE: OLEDTERMINAL_RW   --> 0x400000A4
   * RESET:      OLEDTERMINAL_RST  --> 0x400000AC
 
-De la même manière que pour le module *Charmap*, avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Terminal*. Ainsi on lit à l'adresse *OLEDTERMINAL_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
+De la même manière que pour le module *Charmap*, avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Terminal*. Ainsi on lit à l'adresse définit par le macro *OLEDTERMINAL_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
 Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDTERMINAL_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
 L'allure de la trame à envoyer est la suivante:
   * la valeur hexadecimal du caractère sur les bits 7 à 0.
@@ -116,43 +183,7 @@ Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du r
 
 **[`^        back to top        ^`](#)**
 
-### Afficheur sept segments
 
-La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
-
-#### Fichiers VHDL
-
-Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
-- `plasma.vhd` dans lequel est instancié le bloc de gestion de l'afficheur sept segments, les entrées/sorties et signaux pilotant le bloc y sont cablés.
-- `ctrl_7seg.vhd` bloc principal on les différents sous-blocs nécessaires à l'affichage sont cablés.
-- `mod_7seg.vhd`
-- `mux_7seg.vhd`
-
-#### Adresse associée au module
-
-Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
-- `0x40000200` : adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `SEVEN_SEGMENT`.
-
-
-#### Schéma du bloc principal **ctrl_7seg.vhd**
-
-<p align="center">
-  <img src="SRC/ctrl_7seg.png" width="400px">
-</p>
-
-
-#### Comment ça fonctionne ?
-
-Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bits et elle sera affichée en sortie, en écriture héxadécimal, sur les 8 afficheurs sept-segments disponibles sur la Nexys 4.
-
-
-#### Programme C
-
-Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
-
-Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.
-
-**[`^        back to top        ^`](#)**
 
 ### Module de gestion de l'I2C
 
