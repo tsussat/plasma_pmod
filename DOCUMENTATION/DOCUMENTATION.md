@@ -4,6 +4,19 @@
   <img src="SRC/plasma.gif">
 </p>
 
+- [Introduction](#introduction)
+- [Prérequis](#prerequis)
+	- [Configuration](#configuration)
+	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
+- [Manuel d'utilisation de certains PMODs](#manuel-dutilisation-de-certains-pmods)
+	- [PMOD Oled-RGB](#pmod-oled-rgb)
+    - [Module Charmap](#module-charmap)
+    - [Module Terminal](#module-terminal)
+    - [Module Bitmap](#module-bitmap)
+	- [Afficheur sept segments](#afficheur-sept-segments)
+	- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
+
+
 ## Introduction
 Cette documentation a pour objectif de détailler le principe de fonctionnement de l'architecture du processeur Plasma lors de son utilisation avec divers PMODs. Ce processeur a été instancié sur une puce FPGA *Artix 7* embarquée sur carte *NEXYS 4*. Il est basé sur une architecture RISC 32-bit softcore et est issu d'un projet open source: [**Plasma**](http://opencores.org/project,plasma). Il tourne à une fréquence d'horloge de 25 MHz. L'utilisation des PMODs repose sur une interface plus flexible codée en C et faisant abstraction du langage de description VHDL.
 
@@ -34,8 +47,9 @@ Une fois l'instanciation faite, il ne faut pas oublier de modifier le fichier **
 
 Ensuite il faut compiler l'ensemble à partir du *Makefile* dans le répertoire courant du projet (cf la partie détaillant le fonctionnement du fichier Makefile).
 
-Pour terminer, si l'ensemble des instructions précédentes ont bien été suivi, il est maintenant possible d'intéragir dans un programme en C avec le PMOD à partir des adresses utilisées et des fonctions *MemoryWrite()* et *MemoryRead()*.
+Pour terminer, si l'ensemble des instructions précédentes ont bien été suivi, il est maintenant possible d'intéragir dans un programme en C avec le PMOD à partir des adresses utilisées et des fonctions *MemoryWrite()* et *MemoryRead()* (cf les exemples donnés ci-dessous pour d'autres modules tel que le module *Charmap* du PMOD Oled-RGB).
 
+**[`^        back to top        ^`](#)**
 
 ## Manuel d'utilisation de certains PMODs
 
@@ -50,6 +64,7 @@ L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bor
 
 Chaque module possède une adresse d'activation sur un bit (*oledXXXXXX_valid*) qui passe à '1' au moment d'une lecture ou d'une écriture à l'adresse correspondante au module.
 
+**[`^        back to top        ^`](#)**
 
 #### Module Charmap
 Le module **Charmap** permet l'affichage sur l'écran Oled-RGB d'un caractère ASCII à une position donnée (ligne et colone).
@@ -67,6 +82,8 @@ L'allure de la trame à envoyer est la suivante:
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledcharmap/Sources/*.
 Pour faciliter l'écriture de la trame à envoyé, une fonction printCar() a été mise en place, prenant en paramètre le caractère, la ligne et la colonne: *void printCar(char row, char col, char car)*.
 
+**[`^        back to top        ^`](#)**
+
 #### Module Terminal
 Le module **Terminal** permet l'affichage sur l'écran Oled-RGB de caractères ASCII en prenant en charge la position. Il est donc plus adapté que le module *Charmap* pour écrire un buffer contenant plusieurs caractères.
 Ce module du PMOD Oled-RGB utilise le précedent module *Charmap* et est adressable aux adresses suivantes:
@@ -81,6 +98,8 @@ L'allure de la trame à envoyer est la suivante:
 
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledterminal/Sources/*.
 
+**[`^        back to top        ^`](#)**
+
 #### Module Bitmap
 Le module **Bitmap** du PMOD Oled-RGB est adressable aux adresses suivantes:
   * READ/WRITE: OLEDBITMAP_RW     --> 0x400000B0
@@ -94,3 +113,76 @@ L'allure de la trame à envoyer est la suivante:
 On peut cependant raccourcir à 8 bits la trame de la valeur de la couleur du pixel en modifiant la valeur de BPP dans la description VHDL (*plasma.vhd*). Cette valeur correspond à la profondeur colorimétrique et elle est définit par défaut à 16 bpp ce qui équivaut au mode *Highcolor*.
 
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledbitmap/Sources/*.
+
+**[`^        back to top        ^`](#)**
+
+### Afficheur sept segments
+
+La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
+
+#### Fichiers VHDL
+
+Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc de gestion de l'afficheur sept segments, les entrées/sorties et signaux pilotant le bloc y sont cablés.
+- `ctrl_7seg.vhd` bloc principal on les différents sous-blocs nécessaires à l'affichage sont cablés.
+- `mod_7seg.vhd`
+- `mux_7seg.vhd`
+
+#### Adresse associée au module
+
+Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
+- `0x40000200` : adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `SEVEN_SEGMENT`.
+
+
+#### Schéma du bloc principal **ctrl_7seg.vhd**
+
+<p align="center">
+  <img src="SRC/ctrl_7seg.png" width="400px">
+</p>
+
+
+#### Comment ça fonctionne ?
+
+Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bits et elle sera affichée en sortie, en écriture héxadécimal, sur les 8 afficheurs sept-segments disponibles sur la Nexys 4.
+
+
+#### Programme C
+
+Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
+
+Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.
+
+**[`^        back to top        ^`](#)**
+
+### Module de gestion de l'I2C
+
+Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
+- Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge.
+- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
+
+#### Fichiers sources
+
+Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
+- `i2c.vhd` bloc principal qui contient deux entités **i2c_clock** et **i2c_controller**.
+- `i2c.h` fichier d'entête que contient les prototype des fonctions nécessaires pour l'établissement d'une communication *I2C*, ainsi que les macros des adresses et masques des  différents registres.
+- `i2c.c` fichier C qui contient les fonctions qui permette de gérer les séquences d'écriture et de lecture du protocole *I2C*.
+
+*NB: Le fichier `main.c` contient un programme d'exemple qui gère une communication avec le capteur PMOD compass*
+
+#### Schéma des blocs de la partie VHDL du module *I2C*
+
+<p align="center">
+  <img src="SRC/i2cbloc.png">
+</p>
+
+#### Adresses associées au module
+
+- `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
+- `0x40000304`: adresse du registre de status du module *I2C*.
+- `0x40000308`: adresse du registre de contrôle du module *I2C*.
+- `0x4000030c`: adresse du registre de données du module *I2C*.
+
+L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
+
+**[`^        back to top        ^`](#)**
