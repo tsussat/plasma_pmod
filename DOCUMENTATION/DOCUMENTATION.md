@@ -10,9 +10,9 @@
 	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
 - [Utilisation](#utilisation)
 - [Ajouter un PMOD supplémentaire](#ajouter-un-pmod-supplementaire)
-- [PMOD Oled-RGB](#pmod-oled-rgb)
-- [Afficheur sept segments](#afficheur-sept-segments)
-- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
+	- [PMOD Oled-RGB](#pmod-oled-rgb)
+	- [Afficheur sept segments](#afficheur-sept-segments)
+	- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
 
 
 ## Introduction
