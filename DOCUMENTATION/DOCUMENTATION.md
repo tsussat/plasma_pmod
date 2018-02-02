@@ -80,7 +80,17 @@ Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 
 
 Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
 - Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge. 
-- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole I2C.
+- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
+
+### Fichiers sources :
+
+Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+- `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
+- `i2c.vhd` bloc principal qui contient deux entités **i2c_clock** et **i2c_controller**.
+- `i2c.h` fichier d'entête que contient les prototype des fonctions nécessaires pour l'établissement d'une communication *I2C*, ainsi que les macros des adresses et masques des  différents registres.
+- `i2c.c` fichier C qui contient les fonctions qui permette de gérer les séquences d'écriture et de lecture du protocole *I2C*.
+
+*NB: Le fichier `main.c` contient un programme d'exemple qui gère une communication avec le capteur PMOD compass*
 
 ### Schéma des blocs de la partie VHDL du module *I2C*:
 
@@ -96,4 +106,6 @@ Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facileme
 - `0x4000030c`: adresse du registre de données du module *I2C*.
 
 L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
+
+
 
