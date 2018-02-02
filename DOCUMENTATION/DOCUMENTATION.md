@@ -4,6 +4,17 @@
   <img src="SRC/plasma.gif">
 </p>
 
+- [Introduction](#introduction)
+- [Prérequis](#prerequis)
+	- [Configuration](#configuration)
+	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
+- [Utilisation](#utilisation)
+- [Ajouter un PMOD supplémentaire](#ajouter-un-pmod-supplementaire)
+- [PMOD Oled-RGB](#pmod-oled-rgb)
+- [Afficheur sept segments](#afficheur-sept-segments)
+- [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
+
+
 ## Introduction
 Cette documentation a pour objectif de détailler le principe de fonctionnement de l'architecture du processeur Plasma lors de son utilisation avec divers PMODs. Ce processeur a été instancié sur une puce FPGA *Artix 7* embarquée sur carte *NEXYS 4*. Il est basé sur une architecture RISC 32-bit softcore et est issu d'un projet open source: [**Plasma**](http://opencores.org/project,plasma). Il tourne à une fréquence d'horloge de 25 MHz. L'utilisation des PMODs repose sur une interface plus flexible codée en C et faisant abstraction du langage de description VHDL.
 
@@ -26,10 +37,15 @@ Les outils nécessaires pour l'ajout de nouveaux PMODs au processeur Plasma sont
   * Les outils cross-compilés pour une architecture MIPS-elf: `mips-elf-gcc`, `mips-elf-as`, `mips-elf-ld`.
   * Le logiciel `Vivado` pour compiler le code VHDL.
 
+**[`^        back to top        ^`](#)**
 
 ## Utilisation
 
+**[`^        back to top        ^`](#)**
+
 ## Ajouter un PMOD supplémentaire
+
+**[`^        back to top        ^`](#)**
 
 ## PMOD Oled-RGB
 
@@ -87,11 +103,13 @@ On peut cependant raccourcir à 8 bits la trame de la valeur de la couleur du pi
 
 Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledbitmap/Sources/*.
 
+**[`^        back to top        ^`](#)**
+
 ## Afficheur sept segments
 
 La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
 
-### Fichiers VHDL :
+### Fichiers VHDL
 
 Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
 - `plasma.vhd` dans lequel est instancié le bloc de gestion de l'afficheur sept segments, les entrées/sorties et signaux pilotant le bloc y sont cablés.
@@ -99,13 +117,13 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
 - `mod_7seg.vhd`
 - `mux_7seg.vhd`
 
-### Adresse associé au module :
+### Adresse associée au module 
 
 Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
 - `0x40000200` : adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `SEVEN_SEGMENT`.
 
 
-### Schéma du bloc principal **ctrl_7seg.vhd** :
+### Schéma du bloc principal **ctrl_7seg.vhd** 
 
 <p align="center">
   <img src="SRC/ctrl_7seg.png" width="400px">
@@ -117,19 +135,19 @@ Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
 Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bits et elle sera affichée en sortie, en écriture héxadécimal, sur les 8 afficheurs sept-segments disponibles sur la Nexys 4.
 
 
-### Programme C :
+### Programme C 
 
 Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
 
 Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.
 
-## Module de gestion de l'I2C :
+## Module de gestion de l'I2C
 
 Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
 - Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge. 
 - Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
 
-### Fichiers sources :
+### Fichiers sources
 
 Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
 - `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
@@ -139,13 +157,13 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
 
 *NB: Le fichier `main.c` contient un programme d'exemple qui gère une communication avec le capteur PMOD compass*
 
-### Schéma des blocs de la partie VHDL du module *I2C*:
+### Schéma des blocs de la partie VHDL du module *I2C*
 
 <p align="center">
   <img src="SRC/i2cbloc.png">
 </p>
 
-### Adresses associées au module :
+### Adresses associées au module
 
 - `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
 - `0x40000304`: adresse du registre de status du module *I2C*.
@@ -153,3 +171,5 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
 - `0x4000030c`: adresse du registre de données du module *I2C*.
 
 L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
+
+**[`^        back to top        ^`](#)**
