@@ -23,51 +23,59 @@ int main(int argc, char ** argv) {
 
 	MemoryWrite(OLEDBITMAP_RST, 1); // Reset the oled_rgb PMOD
 
+	'O'
 	printPixel(25, 32, 0xF800);
 	printPixel(25, 33, 0xF800);
 	printPixel(25, 34, 0xF800);
 	printPixel(25, 35, 0xF800);
 	printPixel(25, 36, 0xF800);
-
-/*
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001920);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001921);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001922);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001923);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001924);
-*/	
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001A20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001B20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001C20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001D20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001E20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001F20);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002020);
 	
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001A24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001B24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001C24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001D24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001E24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8001F24);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002024);
+	printPixel(31, 32, 0xF800);
+	printPixel(31, 33, 0xF800);
+	printPixel(31, 34, 0xF800);
+	printPixel(31, 35, 0xF800);
+	printPixel(31, 36, 0xF800);
 	
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002020);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002021);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002022);
-	MemoryWrite(OLEDBITMAP_RW, 0xF8002023);
+	printPixel(26, 32, 0xF800);
+	printPixel(27, 32, 0xF800);
+	printPixel(28, 32, 0xF800);
+	printPixel(29, 32, 0xF800);
+	printPixel(30, 32, 0xF800);
 	
-/*
-	MemoryWrite( OLEDBITMAP_RW, 0x01002132 );
-
-	MemoryWrite( OLEDBITMAP_RW, 0x00002232 );
-
-	MemoryWrite( OLEDBITMAP_RW, 0x111F2332 );
-
-	MemoryWrite( OLEDBITMAP_RW, 0x111F2432 );
-
-	MemoryWrite( OLEDBITMAP_RW, 0x111F2532 );
-*/
+	printPixel(26, 36, 0xF800);
+	printPixel(27, 36, 0xF800);
+	printPixel(28, 36, 0xF800);
+	printPixel(29, 36, 0xF800);
+	printPixel(30, 36, 0xF800);
+	
+	
+	'K'
+	printPixel(25, 42, 0x07C0);	
+	printPixel(26, 42, 0x07C0);
+	printPixel(27, 42, 0x07C0);
+	printPixel(28, 42, 0x07C0);
+	printPixel(29, 42, 0x07C0);
+	printPixel(30, 42, 0x07C0);
+	printPixel(31, 42, 0x07C0);
+	
+	printPixel(29, 43, 0x07C0);
+	printPixel(28, 44, 0x07C0);
+	printPixel(27, 45, 0x07C0);
+	printPixel(26, 46, 0x07C0);
+	printPixel(25, 47, 0x07C0);
+	
+	printPixel(29, 45, 0x07C0);
+	printPixel(30, 46, 0x07C0);
+	printPixel(31, 47, 0x07C0);
+	
+	
+	'!'
+	printPixel(25, 53, 0x001F);	
+	printPixel(26, 53, 0x001F);
+	printPixel(27, 53, 0x001F);
+	printPixel(28, 53, 0x001F);
+	printPixel(31, 53, 0x001F);
+	
 
 	while(1)
 		;
