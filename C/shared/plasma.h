@@ -32,8 +32,7 @@
 #define FLASH_BASE        0x30000000
 #define BUTTONS_VALUES    0x40000100
 #define BUTTONS_CHANGE    0x40000104
-#define SEVEN_SEGMENT_BASE  0x40000200
-#define SEVEN_SEGMENT_RESET 0x40000204
+#define SEVEN_SEGMENT	  0x40000200
 
 /*********** GPIO out bits ***************/
 #define ETHERNET_MDIO     0x00200000
