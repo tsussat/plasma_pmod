@@ -40,8 +40,6 @@ Les outils nécessaire pour l'ajout de nouveaux PMODs au processeur Plasma sont 
 Le PMOD Oled-RGB permet l'affichage de caractères ASCII sous 8 lignes X 16 colonnes. Il permet aussi de réalisé un affichage Bitmap sous 96X64 avec 16 bits/pixel. Un module d'affichage de jusqu'à 4 courbes a également été instancié (non testé encore).
 L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bornat détaillé à l'adresse suivante: http://bornat.vvv.enseirb.fr/wiki/doku.php?id=en202:pmodoledrgb.
 
-<!-- Auteur : Henri, Version 0.1 -->
-
 ## Afficheur sept segments
 
 La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
@@ -54,7 +52,7 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
 - `mod_7seg.vhd`
 - `mux_7seg.vhd`
 
-### Adresse du bloc :
+### Adresse associé au module :
 
 Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
 - `0x40000200` : adresse de l'entrée sur 32 bits, il faut écrire les données à cette adresse. Le *macro* associé à cette adresse est `SEVEN_SEGMENT`.
@@ -77,3 +75,25 @@ Il suffit d'écrire à l'adresse `SEVEN_SEGMENT`, la valeur en entrée sur 32 bi
 Un programme d'exemple est fournit, il implémente un compteur allant de *0* à *2000* (*7DO* en hexadécimal). Le compteur s'incrémente toute les *100ms*. L'affichage de la valeur du compteur est fait sur les afficheurs sept-segment.
 
 Ensuite le programme rentre dans un boucle infinie dans laquelle il affiche les 16 bits de données *switchs*, à la fois sur les quatres afficheurs de droite, et sur les quatres afficheurs de gauche.
+
+## Module de gestion de l'I2C :
+
+Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
+- Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge. 
+- Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole I2C.
+
+### Schéma des blocs de la partie VHDL du module *I2C*:
+
+<p align="center">
+  <img src="SRC/i2cbloc.png">
+</p>
+
+### Adresses associées au module :
+
+- `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
+- `0x40000304`: adresse du registre de status du module *I2C*.
+- `0x40000308`: adresse du registre de contrôle du module *I2C*.
+- `0x4000030c`: adresse du registre de données du module *I2C*.
+
+L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
+
