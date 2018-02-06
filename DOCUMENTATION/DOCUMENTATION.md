@@ -173,3 +173,24 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
 L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du module *I2C*.
 
 **[`^        back to top        ^`](#)**
+
+### Séquences d'écriture et de lecture d'une communication i2c
+
+**Séquence d'écriture dans une communication i2c:**
+<p align="center">
+  <img src="SRC/send.png">
+</p>
+
+**Séquence de lecture dans une communication i2c:**
+<p align="center">
+  <img src="SRC/receive.png">
+</p>
+
+Le module (partie logicielle + partie matérielle) gère ces séquences, il suffira donc pour interfacer un PMOD *I2C* d'utiliser, une à une, les fonctions mises à disposition (voir `i2c.h`).
+
+### Exemple d'interface d'un PMOD : Le PMOD boussole
+
+Cet exemple s'appuie sur le programme [`C/i2c/Sources/main.c`](https://github.com/madellimac/plasma_pmod/blob/master/C/i2c/Sources/main.c).
+
+
+

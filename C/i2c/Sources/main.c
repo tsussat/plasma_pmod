@@ -1,6 +1,6 @@
 // I2C module -- main.c
 // Author : Henri
-// Description : Example program handling I2C communication with the PMOD compass
+// Description : Example program which handles I2C communication with the PMOD compass
 
 #include "../Includes/i2c.h"
 
