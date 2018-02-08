@@ -125,12 +125,14 @@ Un programme d'exemple est fournit dans le fichier *main.c* du répertoire *C/sw
 ## Module de gestion de l'I2C
 
 Les nombreux PMOD *I2C* fournits par Digilent peuvent être interfacés facilement au processeur Plasma via le module *I2C*. Ce module est un hybride en matériel et logiciel. En effet, il est constitué de deux parties :
+
 - Un bloc matériel décrit en *VHDL* qui permet de synchroniser et de gérer bit à bit les émissions/réceptions des signaux qui assurent la communication *I2C*: *SDA* pour les données et *SCL* pour l'horloge.
 - Un programme écrit en C bas niveau, qui permet de gérer les séquences d'écriture et de lecture propres au protocole *I2C*.
 
 ### Fichiers sources
 
 Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
+
 - `plasma.vhd` dans lequel est instancié le bloc VHDL du module *I2C*.
 - `i2c.vhd` bloc principal qui contient deux entités **i2c_clock** et **i2c_controller**.
 - `i2c.h` fichier d'entête que contient les prototype des fonctions nécessaires pour l'établissement d'une communication *I2C*, ainsi que les macros des adresses et masques des  différents registres.
@@ -169,9 +171,41 @@ L'écriture ou la lecture sur l'une de ces adresses active le bloc VHDL du modul
 
 Le module (partie logicielle + partie matérielle) gère ces séquences, il suffira donc pour interfacer un PMOD *I2C* d'utiliser, une à une, les fonctions mises à disposition (voir `i2c.h`).
 
+**[`^        back to top        ^`](#)**
+
 ### Exemple d'interface d'un PMOD : Le PMOD boussole
 
-Cet exemple s'appuie sur le programme [`C/i2c/Sources/main.c`](https://github.com/madellimac/plasma_pmod/blob/master/C/i2c/Sources/main.c).
+Cet exemple s'appuie sur le programme [`C/i2c/Sources/main.c`](https://github.com/madellimac/plasma_pmod/blob/master/C/i2c/Sources/main.c). Il s'agit là d'une utilisation spécifique au PMOD compass, mais en général la communication avec des capteurs selon le protocole I2C est assez similaire.
+
+Pour bien comprendre ce programme il faut lire la documentation du [`HMC5883L`](https://aerocontent.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5883L_3-Axis_Digital_Compass_IC.pdf), le circuit intégré utilisé dans le PMOD Compass. L'exemple est tiré de la datasheet.
+
+Dans ce programme on trouve deux parties : l'initialisation et la boucle principale.
+
+#### L'initalisation
+Dans cette partie on écrit sur les registres appropriés, dans le but de paramétrer l'acquisition comme on le souhaite. Voici les étapes de configuration dans cet exemple :
+
+- Ecriture sur le registre de configuration A de `0x70`: moyennage sur 8 échantillons, 15 Hz, mesure normale
+- Ecriture sur le registre de configuration B de `0xA0`: gain de 5
+- Ecriture sur le registre de mode de `0x00`: Mode mesure continue
+- Attente de 6 ms au moins.
+
+
+#### La boucle principale
+
+Dans cette partie on effectue les mesures à chaque tour de boucle, dans notre cas cela consiste à venir lire les registres de données du capteur un par un, puis replacer le pointeur de registre pour la prochaine mesure.
+
+*Remarque: Le pointeur de registre s'incrémente à chaque lecture. Après l'initialisation ce pointeur de registre pointe vers le premier registre de données (`0x03`) et on n'aura pas besoin de l'incrémenter manuellement entre chaque registre.*
+
+**Début de boucle**
+
+- Lecture des 6 registres contenant les valeurs
+- Stockage en mémoire
+- Placement du pointeur de registre sur l'adresse du premier registre de données pour la prochaine mesure.
+- Attente de 67 ms au moins pour une fréquence de 15 Hz
+
+**Fin de boucle**
+
+**[`^        back to top        ^`](#)**
 
 ## Manuel d'utilisation de certains PMODs
 
