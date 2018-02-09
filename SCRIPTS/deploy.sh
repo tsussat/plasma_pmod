@@ -14,12 +14,12 @@ SCP="scp"
 GATEWAY="ssh.enseirb-matmeca.fr"
 USER="paukocialkowsk"
 PORT=1234
-PROJECT="projet-avance-se"
+ROOT="projet-avance-se"
 BITSTREAM="Plasma/BIN/plasma.bit"
-PROJECT="hello"
+PROJECT="i2c"
 BINARY="Plasma/BIN/$PROJECT.bin"
-SRC="$HOME/$PROJECT/Plasma"
-DST="$USER@$GATEWAY:$PROJECT"
+SRC="$HOME/$ROOT/Plasma"
+DST="$USER@$GATEWAY:$ROOT"
 HOST="$1"
 
 if [ -z "$HOST" ]
