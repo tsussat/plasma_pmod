@@ -18,16 +18,23 @@
 #define I2C_CONTROL_STOP        (1 << 1)
 #define I2C_CONTROL_DATA_READ   (1 << 2)
 #define I2C_CONTROL_DATA_WRITE  (1 << 3)
-#define I2C_CONTROL_ACK         (1 << 4)
+#define I2C_CONTROL_NACK        (1 << 4)
 #define I2C_CONTROL_SELECT      (1 << 5)
+
+#define SLAVE_ADDR_TMP3       0x4B
+#define SLAVE_ADDRESS_CMPS    0x1E
+#define SLAVE_ADDRESS_GYRO    0x69
+
+#define SELECT_PMOD	0x01
+#define SELECT_TMP	0x00
 
 #define READ      1 //
 #define WRITE     0 // used in adress_send() function to chose reading or writing
 
-void select_mode(unsigned int mode); // in order to select one of the two i2c plugged PMOD
+void wait_busy();
+void select_mode(unsigned int select);
 void start();
 void stop();
-void wait_busy();
-int adress_send(unsigned int addr, unsigned int r_w);
+void address_set(unsigned int addr, unsigned int r_w);
 int send_data(unsigned int data);
-int receive_data(unsigned int *buf, unsigned int buf_len);
+void receive_data(unsigned int *buf, unsigned int buf_len);

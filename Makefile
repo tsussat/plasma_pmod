@@ -90,7 +90,7 @@ BUILD_BINS += $(BIN)/switch_led.bin
 PROJECTS += $(SWITCH_LED)
 
 I2C = $(BIN)/i2c.bin
-I2C_FILES = main.c
+I2C_FILES = main.c i2c.c
 I2C_SOURCES = $(addprefix $(C)/i2c/Sources/,$(I2C_FILES))
 I2C_OBJECTS = $(addprefix $(OBJ)/i2c/,$(I2C_FILES:.c=.o))
 BUILD_DIRS += $(OBJ)/i2c
