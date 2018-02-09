@@ -89,6 +89,14 @@ BUILD_DIRS += $(OBJ)/switch_led
 BUILD_BINS += $(BIN)/switch_led.bin
 PROJECTS += $(SWITCH_LED)
 
+I2C = $(BIN)/i2c.bin
+I2C_FILES = main.c
+I2C_SOURCES = $(addprefix $(C)/i2c/Sources/,$(I2C_FILES))
+I2C_OBJECTS = $(addprefix $(OBJ)/i2c/,$(I2C_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/i2c
+BUILD_BINS += $(BIN)/i2c.bin
+PROJECTS += $(I2C)
+
 # HDL
 
 PLASMA_SOC = $(BIN)/plasma.bit
@@ -100,28 +108,40 @@ PLASMA_SOC_FILES = alu.vhd \
 	comb_alu_1.vhd \
 	control.vhd \
 	conversion.vhd \
+	ctrl_7seg.vhd \
 	ctrl_SL.vhd \
 	dma_engine.vhd \
 	mem_ctrl.vhd \
 	memory_64k.vhd \
 	mlite_cpu.vhd \
 	mlite_pack.vhd \
+	mux_7seg.vhd \
 	mult.vhd \
+	mod_7seg.vhd \
 	pc_next.vhd \
 	pipeline.vhd \
 	plasma.vhd \
+	pmodoledrgb_bitmap.vhd \
+	pmodoledrgb_charmap.vhd \
+	pmodoledrgb_nibblemap.vhd \
+	pmodoledrgb_sigplot.vhd \
+	pmodoledrgb_terminal.vhd \
 	pmodoledrgb_charmap.vhd \
 	ram_boot.vhd \
 	reg_bank.vhd \
 	sequ_alu_1.vhd \
 	shifter.vhd \
-	tbench.vhd \
 	top_plasma.vhd \
+	trans_hexto7seg.vhd \
 	txt_util.vhd \
 	vga_bitmap_160x100.vhd \
 	vga_ctrl.vhd \
 	vgd_bitmap_640x480.vhd
 PLASMA_SOC_SOURCES = $(addprefix $(PLASMA)/,$(PLASMA_SOC_FILES))
+
+PLASMA_SIMULATION_FILES = tbench.vhd
+PLASMA_SIMULATION_SOURCES = $(addprefix $(PLASMA)/,$(PLASMA_SIMULATION_FILES))
+
 PLASMA_SOC_TOP = top_plasma
 BUILD_DIRS += $(OBJ)/plasma
 
@@ -134,6 +154,7 @@ CONFIG_TARGET ?= nexys4_DDR
 CONFIG_PART ?= xc7a100tcsg324-1
 CONFIG_SERIAL ?= /dev/ttyUSB1
 CONFIG_UART ?= yes
+CONFIG_I2C ?= yes
 
 ifeq ($(CONFIG_PROJECT),hello)
 PROJECT = $(HELLO)
@@ -143,6 +164,8 @@ else ifeq ($(CONFIG_PROJECT),rgb_oled)
 PROJECT = $(RGB_OLED)
 else ifeq ($(CONFIG_PROJECT),switch_led)
 PROJECT = $(SWITCH_LED)
+else ifeq ($(CONFIG_PROJECT),i2c)
+PROJECT = $(I2C)
 endif
 
 PLASMA_SOC_GENERICS =
@@ -152,6 +175,13 @@ PLASMA_SOC_GENERICS += eUart=1'b1
 PLASMA_SOC_FILES += uart.vhd
 else
 PLASMA_SOC_GENERICS += eUart=1'b0
+endif
+
+ifeq ($(CONFIG_I2C),yes)
+PLASMA_SOC_GENERICS += eI2C=1'b1
+PLASMA_SOC_FILES += i2c.vhd
+else
+PLASMA_SOC_GENERICS += eI2C=1'b0
 endif
 
 PLASMA_SOC_ARGUMENTS = $(foreach generic,$(PLASMA_SOC_GENERICS),-generic $(generic))
@@ -236,6 +266,16 @@ $(SWITCH_LED): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS) $(C
 
 .PHONY: switch_led
 switch_led: $(SWITCH_LED)
+
+$(I2C_OBJECTS): $(OBJ)/i2c/%.o: $(C)/i2c/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(I2C): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/i2c/i2c.map -s -N -o $(OBJ)/i2c/i2c.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/i2c/i2c.axf $@ $(OBJ)/i2c/code_bin.txt
+
+.PHONY: i2c
+i2c: $(I2C)
 
 .PHONY: project
 project: $(PROJECT)
