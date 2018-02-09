@@ -20,6 +20,7 @@ HDL = $(TOP)/HDL
 BUILD = $(TOP)/BUILD
 SIMU = $(TOP)/SIMU
 SYNTHESIS = $(TOP)/SYNTHESIS
+SCRIPTS = $(TOP)/SCRIPTS
 
 PLASMA = $(HDL)/PLASMA
 TOOLS = $(C)/tools
@@ -250,6 +251,10 @@ programmer: $(PROGRAMMER)
 .PHONY: send
 send: $(PROGRAMMER) $(PROJECT)
 	$(PROGRAMMER) $(PROJECT) $(CONFIG_SERIAL)
+
+.PHONY: flash
+flash: $(PLASMA_SOC)
+	openocd -f $(SCRIPTS)/nexys4-ddr.cfg  -c "init; jtagspi_init 0 $<;"
 
 $(SHARED_OBJECTS): $(OBJ)/shared/%.o: $(C)/shared/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
