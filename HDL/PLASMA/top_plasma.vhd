@@ -19,6 +19,7 @@ use unisim.VComponents.all;
 entity top_plasma is
    generic(ethernet    : std_logic  := '0';
            eUart       : std_logic  := '1';
+           eI2C        : std_logic  := '1';
            use_cache   : std_logic  := '0');
     port(
 	clk100: in std_logic;
@@ -53,13 +54,18 @@ entity top_plasma is
    btnR         : in std_logic;
    btnD         : in std_logic;
 
+		i2c_sda_tmp  : inout std_logic;
+		i2c_scl_tmp  : inout std_logic;
+		i2c_sda_pmod : inout std_logic;
+		i2c_scl_pmod : inout std_logic;
+
 	 	OLED_PMOD_CS      	: out STD_LOGIC;
-    OLED_PMOD_MOSI    	: out STD_LOGIC;
-    OLED_PMOD_SCK     	: out STD_LOGIC;
-    OLED_PMOD_DC      	: out STD_LOGIC;
-    OLED_PMOD_RES     	: out STD_LOGIC;
-    OLED_PMOD_VCCEN   	: out STD_LOGIC;
-    OLED_PMOD_EN      	: out STD_LOGIC
+	    OLED_PMOD_MOSI    	: out STD_LOGIC;
+	    OLED_PMOD_SCK     	: out STD_LOGIC;
+	    OLED_PMOD_DC      	: out STD_LOGIC;
+	    OLED_PMOD_RES     	: out STD_LOGIC;
+	    OLED_PMOD_VCCEN   	: out STD_LOGIC;
+	    OLED_PMOD_EN      	: out STD_LOGIC
 	);
 end top_plasma;
 
@@ -113,6 +119,7 @@ end process;
 		log_file    => "UNUSED",
 		ethernet    => ethernet,
 		eUart       => eUart,
+		eI2C        => eI2C,
 		use_cache   => use_cache
 	)
 	PORT MAP(
@@ -161,16 +168,21 @@ end process;
         btnR => btnR,
         btnD => btnD,
 
-					OLED_PMOD_CS	=> OLED_PMOD_CS,
-		    	OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
-		    	OLED_PMOD_SCK   => OLED_PMOD_SCK,
-		    	OLED_PMOD_DC    => OLED_PMOD_DC,
-		    	OLED_PMOD_RES   => OLED_PMOD_RES,
-		    	OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
-		    	OLED_PMOD_EN    => OLED_PMOD_EN,
+	i2c_sda_tmp => i2c_sda_tmp,
+	i2c_scl_tmp => i2c_scl_tmp,
+	i2c_sda_pmod => i2c_sda_pmod,
+	i2c_scl_pmod => i2c_scl_pmod,
 
-		gpio0_out       => open,
-		gpioA_in        => x"00000000" --open
+	OLED_PMOD_CS	=> OLED_PMOD_CS,
+	OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
+	OLED_PMOD_SCK   => OLED_PMOD_SCK,
+	OLED_PMOD_DC    => OLED_PMOD_DC,
+	OLED_PMOD_RES   => OLED_PMOD_RES,
+	OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
+	OLED_PMOD_EN    => OLED_PMOD_EN,
+
+	gpio0_out       => open,
+	gpioA_in        => x"00000000" --open
 	);
 
 

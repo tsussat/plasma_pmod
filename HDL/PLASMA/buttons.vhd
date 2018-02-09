@@ -44,13 +44,13 @@ begin
 	-------------------------------------------------------------------------
 	process (clock, reset)
 	begin
-		IF clock'event AND clock = '1' THEN
+		IF reset = '1' THEN
+			buttons_buffer <= (others => '0');
+			buttons_change <= (others => '0');
+		ELSIF clock'event AND clock = '1' THEN
 			buttons_values <= buttons_input;
 
-			IF reset = '1' THEN
-				buttons_buffer <= (others => '0');
-				buttons_change <= (others => '0');
-			ELSIF buttons_access = '1' THEN
+			IF buttons_access = '1' THEN
 				buttons_buffer <= buttons_input;
 				buttons_change <= buttons_input xor buttons_buffer;
 			END IF;

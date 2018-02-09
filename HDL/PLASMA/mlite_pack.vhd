@@ -641,6 +641,74 @@ end component; --buttons_controller
     ---------------------------------------------------------------------------------------
 
     ---------------------------------------------------------------------------------------
+component i2c_clock
+   port(
+		clock          : in  std_logic;
+		reset          : in  std_logic;
+		enable         : in  std_logic;
+		i2c_scl        : inout std_logic;
+		i2c_mid        : out std_logic
+	);
+end component; --i2c_clock
+
+component i2c_controller
+   port(
+		clock          : in  std_logic;
+		reset          : in  std_logic;
+		i2c_access     : in  std_logic;
+		i2c_sda        : inout std_logic;
+		i2c_scl        : in std_logic;
+		i2c_mid        : in std_logic;
+		i2c_clock_enable : out std_logic;
+
+		addr : in std_logic_vector(31 downto 0);
+		control_in : in std_logic_vector(31 downto 0);
+		control_out : out std_logic_vector(31 downto 0);
+		control_update : out std_logic;
+		status : out std_logic_vector(31 downto 0);
+		data_in : in std_logic_vector(31 downto 0);
+		data_out : out std_logic_vector(31 downto 0);
+		data_update : out std_logic
+	);
+end component; --i2c_controller
+    ---------------------------------------------------------------------------------------
+    ---------------------------------------------------------------------------------------
+component mux_7seg
+    Port ( cmd : in STD_LOGIC_VECTOR (2 downto 0);
+           E0 : in STD_LOGIC_VECTOR (6 downto 0);
+           E1 : in STD_LOGIC_VECTOR (6 downto 0);
+           E2 : in STD_LOGIC_VECTOR (6 downto 0);
+           E3 : in STD_LOGIC_VECTOR (6 downto 0);
+           E4 : in STD_LOGIC_VECTOR (6 downto 0);
+           E5 : in STD_LOGIC_VECTOR (6 downto 0);
+           E6 : in STD_LOGIC_VECTOR (6 downto 0);
+           E7 : in STD_LOGIC_VECTOR (6 downto 0);
+           S : out STD_LOGIC_VECTOR (6 downto 0)
+           );
+end component;
+
+component mod_7seg
+	Port (
+		    clk : in STD_LOGIC;
+		    rst : in STD_LOGIC;
+		    AN : out STD_LOGIC_VECTOR (7 downto 0);
+        cmd_mux_7seg : out STD_LOGIC_VECTOR (2 downto 0));
+end component;
+
+component trans_hexto7seg
+  Port ( input_mem : in STD_LOGIC_VECTOR (31 downto 0);
+    e0 : out STD_LOGIC_VECTOR (6 downto 0);
+    e1 : out STD_LOGIC_VECTOR (6 downto 0);
+    e2 : out STD_LOGIC_VECTOR (6 downto 0);
+    e3 : out STD_LOGIC_VECTOR (6 downto 0);
+    e4 : out STD_LOGIC_VECTOR (6 downto 0);
+    e5 : out STD_LOGIC_VECTOR (6 downto 0);
+    e6 : out STD_LOGIC_VECTOR (6 downto 0);
+    e7 : out STD_LOGIC_VECTOR (6 downto 0)
+  );
+end component;
+    ---------------------------------------------------------------------------------------
+    ---------------------------------------------------------------------------------------
     COMPONENT eth_dma
         PORT(clk         : IN  std_logic;  --25 MHz
              reset       : IN  std_logic;
@@ -674,7 +742,13 @@ end component; --buttons_controller
             log_file    : string    := "UNUSED";
             ethernet    : std_logic := '0';
             eUart       : std_logic := '0';
-            use_cache   : std_logic := '0'
+            eI2C        : std_logic := '0';
+            use_cache   : std_logic := '0';
+           CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
+           BPP         : integer range 1 to 16 := 16; -- bits per pixel
+           GREYSCALE   : boolean := False;			-- color or greyscale ? (only for BPP>6)
+           MAX_ON_TOP  : boolean := True;
+           LEFT_SIDE   : boolean := False
             );
         PORT(
             clk             : IN  std_logic;

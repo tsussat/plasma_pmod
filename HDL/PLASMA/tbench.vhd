@@ -151,6 +151,7 @@ BEGIN  --architecture
 	    memory_type => memory_type,
 	    ethernet	=> '1',
 	    eUart	=> '1',
+	    eI2C	=> '1',
 	    use_cache	=> '0',
 	    log_file	=> log_file
 	    )
