@@ -73,6 +73,14 @@ BUILD_DIRS += $(OBJ)/mandelbrot
 BUILD_BINS += $(BIN)/mandelbrot.bin
 PROJECTS += $(MANDELBROT)
 
+BUTTONS = $(BIN)/buttons.bin
+BUTTONS_FILES = main.c
+BUTTONS_SOURCES = $(addprefix $(C)/buttons/Sources/,$(BUTTONS_FILES))
+BUTTONS_OBJECTS = $(addprefix $(OBJ)/buttons/,$(BUTTONS_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/buttons
+BUILD_BINS += $(BIN)/buttons.bin
+PROJECTS += $(BUTTONS)
+
 RGB_OLED = $(BIN)/rgb_oled.bin
 RGB_OLED_FILES = main.c
 RGB_OLED_SOURCES = $(addprefix $(C)/rgb_oled/Sources/,$(RGB_OLED_FILES))
@@ -89,6 +97,14 @@ BUILD_DIRS += $(OBJ)/switch_led
 BUILD_BINS += $(BIN)/switch_led.bin
 PROJECTS += $(SWITCH_LED)
 
+SEVEN_SEGMENTS = $(BIN)/seven_segments.bin
+SEVEN_SEGMENTS_FILES = main.c
+SEVEN_SEGMENTS_SOURCES = $(addprefix $(C)/seven_segments/Sources/,$(SEVEN_SEGMENTS_FILES))
+SEVEN_SEGMENTS_OBJECTS = $(addprefix $(OBJ)/seven_segments/,$(SEVEN_SEGMENTS_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/seven_segments
+BUILD_BINS += $(BIN)/seven_segments.bin
+PROJECTS += $(SEVEN_SEGMENTS)
+
 I2C = $(BIN)/i2c.bin
 I2C_FILES = main.c i2c.c
 I2C_SOURCES = $(addprefix $(C)/i2c/Sources/,$(I2C_FILES))
@@ -103,36 +119,24 @@ PLASMA_SOC = $(BIN)/plasma.bit
 PLASMA_SOC_FLOW = $(OBJ)/plasma/plasma.tcl
 PLASMA_SOC_FILES = alu.vhd \
 	bus_mux.vhd \
-	buttons.vhd \
 	cam_pkg.vhd \
 	comb_alu_1.vhd \
 	control.vhd \
 	conversion.vhd \
-	ctrl_7seg.vhd \
-	ctrl_SL.vhd \
 	dma_engine.vhd \
 	mem_ctrl.vhd \
 	memory_64k.vhd \
 	mlite_cpu.vhd \
 	mlite_pack.vhd \
-	mux_7seg.vhd \
 	mult.vhd \
-	mod_7seg.vhd \
 	pc_next.vhd \
 	pipeline.vhd \
 	plasma.vhd \
-	pmodoledrgb_bitmap.vhd \
-	pmodoledrgb_charmap.vhd \
-	pmodoledrgb_nibblemap.vhd \
-	pmodoledrgb_sigplot.vhd \
-	pmodoledrgb_terminal.vhd \
-	pmodoledrgb_charmap.vhd \
 	ram_boot.vhd \
 	reg_bank.vhd \
 	sequ_alu_1.vhd \
 	shifter.vhd \
 	top_plasma.vhd \
-	trans_hexto7seg.vhd \
 	txt_util.vhd \
 	vga_bitmap_160x100.vhd \
 	vga_ctrl.vhd \
@@ -154,16 +158,24 @@ CONFIG_TARGET ?= nexys4_DDR
 CONFIG_PART ?= xc7a100tcsg324-1
 CONFIG_SERIAL ?= /dev/ttyUSB1
 CONFIG_UART ?= yes
+CONFIG_BUTTONS ?= yes
+CONFIG_RGB_OLED ?= yes
+CONFIG_SWITCH_LED ?= yes
+CONFIG_SEVEN_SEGMENTS ?= yes
 CONFIG_I2C ?= yes
 
 ifeq ($(CONFIG_PROJECT),hello)
 PROJECT = $(HELLO)
 else ifeq ($(CONFIG_PROJECT),mandelbrot)
 PROJECT = $(MANDELBROT)
+else ifeq ($(CONFIG_PROJECT),buttons)
+PROJECT = $(BUTTONS)
 else ifeq ($(CONFIG_PROJECT),rgb_oled)
 PROJECT = $(RGB_OLED)
 else ifeq ($(CONFIG_PROJECT),switch_led)
 PROJECT = $(SWITCH_LED)
+else ifeq ($(CONFIG_PROJECT),seven_segments)
+PROJECT = $(SEVEN_SEGMENTS)
 else ifeq ($(CONFIG_PROJECT),i2c)
 PROJECT = $(I2C)
 endif
@@ -175,6 +187,34 @@ PLASMA_SOC_GENERICS += eUart=1'b1
 PLASMA_SOC_FILES += uart.vhd
 else
 PLASMA_SOC_GENERICS += eUart=1'b0
+endif
+
+ifeq ($(CONFIG_BUTTONS),yes)
+PLASMA_SOC_GENERICS += eButtons=1'b1
+PLASMA_SOC_FILES += buttons.vhd
+else
+PLASMA_SOC_GENERICS += eButtons=1'b0
+endif
+
+ifeq ($(CONFIG_RGB_OLED),yes)
+PLASMA_SOC_GENERICS += eRGBOLED=1'b1
+PLASMA_SOC_FILES += pmodoledrgb_bitmap.vhd pmodoledrgb_charmap.vhd pmodoledrgb_nibblemap.vhd pmodoledrgb_sigplot.vhd pmodoledrgb_terminal.vhd pmodoledrgb_charmap.vhd
+else
+PLASMA_SOC_GENERICS += eRGBOLED=1'b0
+endif
+
+ifeq ($(CONFIG_SWITCH_LED),yes)
+PLASMA_SOC_GENERICS += eSwitchLED=1'b1
+PLASMA_SOC_FILES += ctrl_SL.vhd
+else
+PLASMA_SOC_GENERICS += eSwitchLED=1'b0
+endif
+
+ifeq ($(CONFIG_SEVEN_SEGMENTS),yes)
+PLASMA_SOC_GENERICS += eSevenSegments=1'b1
+PLASMA_SOC_FILES += ctrl_7seg.vhd trans_hexto7seg.vhd mux_7seg.vhd mod_7seg.vhd
+else
+PLASMA_SOC_GENERICS += eSevenSegments=1'b0
 endif
 
 ifeq ($(CONFIG_I2C),yes)
@@ -247,6 +287,16 @@ $(MANDELBROT): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS) $(C
 .PHONY: mandelbrot
 mandelbrot: $(MANDELBROT)
 
+$(BUTTONS_OBJECTS): $(OBJ)/buttons/%.o: $(C)/buttons/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(BUTTONS): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/buttons/buttons.map -s -N -o $(OBJ)/buttons/buttons.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/buttons/buttons.axf $(BUTTONS) $(OBJ)/buttons/code_bin.txt
+
+.PHONY: buttons
+buttons: $(BUTTONS)
+
 $(RGB_OLED_OBJECTS): $(OBJ)/rgb_oled/%.o: $(C)/rgb_oled/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
@@ -266,6 +316,16 @@ $(SWITCH_LED): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS) $(C
 
 .PHONY: switch_led
 switch_led: $(SWITCH_LED)
+
+$(SEVEN_SEGMENTS_OBJECTS): $(OBJ)/seven_segments/%.o: $(C)/seven_segments/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(SEVEN_SEGMENTS): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/seven_segments/seven_segments.map -s -N -o $(OBJ)/seven_segments/seven_segments.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/seven_segments/seven_segments.axf $(SEVEN_SEGMENTS) $(OBJ)/seven_segments/code_bin.txt
+
+.PHONY: seven_segments
+seven_segments: $(SEVEN_SEGMENTS)
 
 $(I2C_OBJECTS): $(OBJ)/i2c/%.o: $(C)/i2c/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<

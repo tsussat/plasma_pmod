@@ -19,6 +19,10 @@ use unisim.VComponents.all;
 entity top_plasma is
    generic(ethernet    : std_logic  := '0';
            eUart       : std_logic  := '1';
+           eButtons    : std_logic  := '1';
+           eRGBOLED    : std_logic  := '1';
+           eSwitchLED  : std_logic  := '1';
+           eSevenSegments : std_logic  := '1';
            eI2C        : std_logic  := '1';
            use_cache   : std_logic  := '0');
     port(
@@ -119,6 +123,10 @@ end process;
 		log_file    => "UNUSED",
 		ethernet    => ethernet,
 		eUart       => eUart,
+		eButtons    => eButtons,
+		eRGBOLED    => eRGBOLED,
+		eSwitchLED  => eSwitchLED,
+		eSevenSegments => eSevenSegments,
 		eI2C        => eI2C,
 		use_cache   => use_cache
 	)

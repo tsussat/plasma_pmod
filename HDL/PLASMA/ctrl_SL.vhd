@@ -34,7 +34,7 @@ end ctrl_SL;
 
 architecture Behavioral of ctrl_SL is
 
-SIGNAL input_coproc, output_coproc 	: std_logic_vector(31 downto 0);
+SIGNAL input_coproc 	: std_logic_vector(31 downto 0);
 
 begin
 	
@@ -42,15 +42,13 @@ begin
 
 	process (clock, reset)
 	begin
-		IF clock'event AND clock = '1' THEN
-			IF ( reset = '1' ) THEN
-				input_coproc 	<= (others => '0');
+		IF ( reset = '1' ) THEN
+			input_coproc 	<= (others => '0');
+		ELSIF clock'event AND clock = '1' THEN
+			IF INPUT_1_valid = '1' THEN
+				input_coproc 	<= INPUT_1;
 			ELSE
-				IF INPUT_1_valid = '1' THEN
-					input_coproc 	<= INPUT_1;
-				ELSE
-					input_coproc 	<= input_coproc;
-				END IF;
+				input_coproc 	<= input_coproc;
 			END IF;
 		END IF;
 	end process;

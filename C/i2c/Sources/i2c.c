@@ -6,7 +6,7 @@
 
 void wait_busy()
 {
-  while (MemoryRead (I2C_STATUS) & I2C_STATUS_BUSY != 0) ;
+  while ((MemoryRead (I2C_STATUS) & I2C_STATUS_BUSY) != 0) ;
 }
 
 // in order to select one of the two i2c plugged PMOD
@@ -24,7 +24,7 @@ void select_mode(unsigned int select)
   MemoryWrite(I2C_CONTROL, ctrl);
 }
 
-void start()
+int start()
 {
   unsigned long ctrl;
 
@@ -33,6 +33,11 @@ void start()
   MemoryWrite(I2C_CONTROL, ctrl); 
 
   wait_busy();
+
+  if ((MemoryRead(I2C_STATUS) & I2C_STATUS_ACK) != 0)
+    return -1;
+
+  return 0;
 }
 
 void stop()
@@ -58,11 +63,6 @@ int send_data(unsigned int data)
 {
   unsigned int ctrl = 0;
 
-  wait_busy();
-
-  if (MemoryRead(I2C_STATUS) & I2C_STATUS_ACK != 0)
-    return -1;
-
   ctrl = MemoryRead(I2C_CONTROL);
   ctrl |= I2C_CONTROL_DATA_WRITE;
 
@@ -71,7 +71,7 @@ int send_data(unsigned int data)
 
   wait_busy();
 
-  if (MemoryRead(I2C_STATUS) & I2C_STATUS_ACK != 0) // check ACK
+  if ((MemoryRead(I2C_STATUS) & I2C_STATUS_ACK) != 0) // check ACK
     return -1;
 
   return 0;

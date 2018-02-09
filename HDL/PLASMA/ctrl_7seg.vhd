@@ -40,10 +40,10 @@ architecture logic of ctrl_7seg is
 begin
   process (clock, reset)
   begin
-    if clock'event and clock = '1' then
-      if reset = '1' then
+    if reset = '1' then
         mem <= "00000000000000000000000000000000";
-      elsif INPUT_1_valid = '1' then
+    elsif clock'event and clock = '1' then
+      if INPUT_1_valid = '1' then
         mem <= INPUT_1;
       end if;
     end if;

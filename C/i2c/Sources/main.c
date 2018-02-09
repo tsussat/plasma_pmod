@@ -8,16 +8,15 @@
 #define SLAVE_ADDRESS_CMPS    0x1E
 
 
-void sleep(unsigned int us)
-{
-  unsigned int t0 = MemoryRead(TIMER_ADR );
-  while (MemoryRead(TIMER_ADR ) - t0 < 500*us)
-    ;
+void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes 
+{	// la fréquence d'horloge vaut 50 MHz
+	unsigned int t0 = MemoryRead( TIMER_ADR  );
+	while ( MemoryRead( TIMER_ADR  ) - t0 < 50000*ms ) // On compte 50000 périodes pour 1 ms
+		;
 }
 
 void cmps_measure(int count)
 {
-  unsigned int data;
   unsigned int buf[6];
 
   short x, y, z;
@@ -44,12 +43,12 @@ void cmps_measure(int count)
   send_data(0x00); // set values
   stop();
 
-  sleep(10000); // 10ms
+  sleep(10); // 10ms
 
   while (count--) {
     address_set(SLAVE_ADDRESS_CMPS, READ);
     start();
-    receive_data(&buf, 6); // Six readings
+    receive_data((unsigned int *) &buf, 6); // Six readings
     stop();
 
     x = (short) (buf[0] << 8) + buf[1];
@@ -59,19 +58,19 @@ void cmps_measure(int count)
     address_set(SLAVE_ADDRESS_CMPS, WRITE);
     start();
     send_data(0x03); // First data register pointer
-    stop();   
+    stop();
 
     puts("x: ");
     print_int(x);
 
-    puts("y: ");
+    puts(" y: ");
     print_int(y);
 
-    puts("z: ");
+    puts(" z: ");
     print_int(z);
     puts("\n");
 
-    sleep(100000); // 100ms
+    sleep(500); // 500ms
   }
 }
 
@@ -87,7 +86,7 @@ void tmp_measure(int count)
   while (count--) {
     address_set(SLAVE_ADDR_TMP3, READ);
     start();
-    receive_data(&buf, 2);
+    receive_data((unsigned int *) &buf, 2);
     stop();
 
     value = (short) (buf[0] << 8) + buf[1];
@@ -97,13 +96,12 @@ void tmp_measure(int count)
     print_int(value);
     puts("\n");
 
-    sleep(100000); // 100ms
+    sleep(500); // 500ms
   }
 }
 
 void gyro_measure(int count)
 {
-  unsigned int data;
   unsigned int buf[6];
 
   short x, y, z;
@@ -125,16 +123,18 @@ void gyro_measure(int count)
   send_data(0x30); // Continous update, FSR = 2000dps
   stop();
   
+  sleep(10); // 10ms
+
   while (count--) {
     for (i = 0; i < 6; i++) {
       address_set(SLAVE_ADDRESS_GYRO, WRITE);
       start();
-      send_data(40 + i); // X data register
+      send_data(40 + i); // data register
       stop();   
 
       address_set(SLAVE_ADDRESS_GYRO, READ);
       start();
-      receive_data(&buf[i], 6);
+      receive_data((unsigned int *) &buf[i], 1);
       stop();   
     }
 
@@ -152,7 +152,7 @@ void gyro_measure(int count)
     print_int(z);
     puts("\n");
 
-    sleep(100000); // 100ms
+    sleep(500); // 500ms
   }
 }
 
@@ -161,9 +161,9 @@ int main(int argc, char const *argv[])
   puts("I2C Module Start\n");
 
   while (1) {
-    cmps_measure(5);
-    tmp_measure(5);
-    gyro_measure(5);
+    cmps_measure(10);
+    tmp_measure(10);
+    gyro_measure(10);
   }
 
   return 0;

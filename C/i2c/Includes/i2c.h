@@ -33,7 +33,7 @@
 
 void wait_busy();
 void select_mode(unsigned int select);
-void start();
+int start();
 void stop();
 void address_set(unsigned int addr, unsigned int r_w);
 int send_data(unsigned int data);

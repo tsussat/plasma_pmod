@@ -79,6 +79,10 @@ entity plasma is
            log_file    : string := "UNUSED";
            ethernet    : std_logic;
            eUart       : std_logic;
+           eButtons    : std_logic;
+           eRGBOLED    : std_logic;
+           eSwitchLED  : std_logic;
+           eSevenSegments : std_logic;
            eI2C        : std_logic;
            use_cache   : std_logic;
            CLK_FREQ_HZ : integer := 100000000;        -- by default, we run at 100MHz
@@ -851,20 +855,26 @@ begin  --architecture
 	--
 	-- Buttons controller
 	--
+	buttons_gen_enabled: if eButtons = '1' generate
+		plasma_buttons_controller: buttons_controller
+		port map(
+			 clock          => clk,
+			 reset        => reset,
+			 buttons_access => enable_buttons,
+			 btnC => btnC,
+			 btnU => btnU,
+			 btnD => btnD,
+			 btnL => btnL,
+			 btnR => btnR,
+			 buttons_values => buttons_values,
+			 buttons_change => buttons_change
+		);
+	end generate;
 
-  plasma_buttons_controller: buttons_controller
-      port map(
-         clock          => clk,
-         reset        => reset,
-         buttons_access => enable_buttons,
-	 btnC => btnC,
-	 btnU => btnU,
-         btnD => btnD,
-         btnL => btnL,
-         btnR => btnR,
-         buttons_values => buttons_values,
-         buttons_change => buttons_change
-      );
+	buttons_gen_disabled: if eI2C = '0' generate
+		buttons_values <= ZERO;
+		buttons_change <= ZERO;
+	end generate;
 
 	--
 	-- I2C CONTROLLER CAN BE REMOVED (FOR ASIC DESIGN)
@@ -1145,155 +1155,174 @@ begin  --architecture
       AN             => an
   );
 
--- Controller Switchs/Leds
-	plasma_ctrl_SL: ctrl_SL port map (
-		clock			     => clk,
-		reset			     => ctrl_SL_reset,
-		INPUT_1		     => cpu_data_w,
-		INPUT_1_valid	 => ctrl_SL_valid,
-		OUTPUT_1		   => ctrl_SL_output,
-		SW				     => sw,
-		LED				     => led,
-		RGB1_Red		   => RGB1_Red,
-		RGB2_Red		   => RGB2_Red,
-		RGB1_Green	   => RGB1_Green,
-		RGB2_Green		 => RGB2_Green,
-		RGB1_Blue		   => RGB1_Blue,
-		RGB2_Blue		   => RGB2_Blue
-	);
+	-- Controller Switchs/Leds
+
+	switch_led_gen_enabled: if eSwitchLED = '1' generate
+		plasma_ctrl_SL: ctrl_SL port map (
+			clock		=> clk,
+			reset		=> ctrl_SL_reset,
+			INPUT_1		=> cpu_data_w,
+			INPUT_1_valid	=> ctrl_SL_valid,
+			OUTPUT_1	=> ctrl_SL_output,
+			SW		=> sw,
+			LED		=> led,
+			RGB1_Red	=> RGB1_Red,
+			RGB2_Red	=> RGB2_Red,
+			RGB1_Green	=> RGB1_Green,
+			RGB2_Green	=> RGB2_Green,
+			RGB1_Blue	=> RGB1_Blue,
+			RGB2_Blue	=> RGB2_Blue
+		);
+	end generate;
+
+	switch_led_gen_disabled: if eSwitchLED = '0' generate
+		ctrl_SL_output <= ZERO;
+	end generate;
+
+	rgb_oled_gen_enabled: if eRGBOLED = '1' generate
+	  -- OLED Charmap
+	  	plasma_oledcharmap: PmodOLEDrgb_charmap
+		Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+		    		PARAM_BUFF  => True,            	-- necessary because we connect CPU bus directly and there is no solution to get it buffered
+		      		LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+
+	   	port map (
+	  		clk          => clk,
+	      	reset        => oledcharmap_reset,
+
+	      	char_write   => oledcharmap_valid,
+	      	char_col     => cpu_data_w(19 downto 16),
+	      	char_row     => cpu_data_w(10 downto 8),
+	      	char         => cpu_data_w(7 downto 0),
+	      	ready        => oledcharmap_output(0),
+
+	      	scroll_up    => cpu_data_w(26),
+	      	row_clear    => cpu_data_w(25),
+	      	screen_clear => cpu_data_w(24),
+
+		PMOD_CS      => oledcharmap_pinout(0),
+	      	PMOD_MOSI    => oledcharmap_pinout(1),
+		PMOD_SCK     => oledcharmap_pinout(2),
+		PMOD_DC      => oledcharmap_pinout(3),
+		PMOD_RES     => oledcharmap_pinout(4),
+		PMOD_VCCEN   => oledcharmap_pinout(5),
+		PMOD_EN      => oledcharmap_pinout(6)
+	  	);
 
 
-  -- OLED Charmap
-  	plasma_oledcharmap: PmodOLEDrgb_charmap
-	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
-            		PARAM_BUFF  => True,            	-- necessary because we connect CPU bus directly and there is no solution to get it buffered
-              		LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+	    -- OLED Terminal
+	    plasma_oledterminal: PmodOLEDrgb_terminal
+		Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+		          	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+		          	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
 
-   	port map (
-  		clk          => clk,
-      	reset        => oledcharmap_reset,
+		port map (
+	    	clk          => clk,
+		reset        => oledterminal_reset,
 
-      	char_write   => oledcharmap_valid,
-      	char_col     => cpu_data_w(19 downto 16),
-      	char_row     => cpu_data_w(10 downto 8),
-      	char         => cpu_data_w(7 downto 0),
-      	ready        => oledcharmap_output(0),
+		char_write   => oledterminal_valid,
+		char         => cpu_data_w(7 downto 0),
+		ready        => oledterminal_output(0),
+		screen_clear => cpu_data_w(24),
 
-      	scroll_up    => cpu_data_w(26),
-      	row_clear    => cpu_data_w(25),
-      	screen_clear => cpu_data_w(24),
-
-	PMOD_CS      => oledcharmap_pinout(0),
-      	PMOD_MOSI    => oledcharmap_pinout(1),
-        PMOD_SCK     => oledcharmap_pinout(2),
-        PMOD_DC      => oledcharmap_pinout(3),
-        PMOD_RES     => oledcharmap_pinout(4),
-        PMOD_VCCEN   => oledcharmap_pinout(5),
-        PMOD_EN      => oledcharmap_pinout(6)
-  	);
+		PMOD_CS      => oledterminal_pinout(0),
+		PMOD_MOSI    => oledterminal_pinout(1),
+		PMOD_SCK     => oledterminal_pinout(2),
+		PMOD_DC      => oledterminal_pinout(3),
+		PMOD_RES     => oledterminal_pinout(4),
+		PMOD_VCCEN   => oledterminal_pinout(5),
+		PMOD_EN      => oledterminal_pinout(6)
+	    );
 
 
-    -- OLED Terminal
-    plasma_oledterminal: PmodOLEDrgb_terminal
-	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
-                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
-                  	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+	      -- OLED Bitmap
+		plasma_oledbitmap: PmodOLEDrgb_bitmap
+		Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
+		            BPP         => BPP,
+		            GREYSCALE   => GREYSCALE,
+		            LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
 
-	port map (
-    	clk          => clk,
-        reset        => oledterminal_reset,
+		port map (
+	      	clk          => clk,
+	       	reset        => oledbitmap_reset,
 
-        char_write   => oledterminal_valid,
-        char         => cpu_data_w(7 downto 0),
-        ready        => oledterminal_output(0),
-        screen_clear => cpu_data_w(24),
+	       	pix_write    => oledbitmap_valid,
+	    	pix_col      => cpu_data_w(6 downto 0),
+	      	pix_row      => cpu_data_w(13 downto 8),
+	     	pix_data_in  => cpu_data_w(((BPP-1)+16) downto 16),
+	    	pix_data_out => oledbitmap_output(BPP-1 downto 0),
 
-	PMOD_CS      => oledterminal_pinout(0),
-        PMOD_MOSI    => oledterminal_pinout(1),
-        PMOD_SCK     => oledterminal_pinout(2),
-        PMOD_DC      => oledterminal_pinout(3),
-        PMOD_RES     => oledterminal_pinout(4),
-        PMOD_VCCEN   => oledterminal_pinout(5),
-        PMOD_EN      => oledterminal_pinout(6)
-    );
-
-
-      -- OLED Bitmap
-	plasma_oledbitmap: PmodOLEDrgb_bitmap
-	Generic map(	CLK_FREQ_HZ => CLK_FREQ_HZ,
-                    BPP         => BPP,
-                    GREYSCALE   => GREYSCALE,
-                    LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
-
-	port map (
-      	clk          => clk,
-       	reset        => oledbitmap_reset,
-
-       	pix_write    => oledbitmap_valid,
-    	pix_col      => cpu_data_w(6 downto 0),
-      	pix_row      => cpu_data_w(13 downto 8),
-     	pix_data_in  => cpu_data_w(((BPP-1)+16) downto 16),
-    	pix_data_out => oledbitmap_output(BPP-1 downto 0),
-
-      	PMOD_CS      => oledbitmap_pinout(0),
-  		PMOD_MOSI    => oledbitmap_pinout(1),
-       	PMOD_SCK     => oledbitmap_pinout(2),
-    	PMOD_DC      => oledbitmap_pinout(3),
-       	PMOD_RES     => oledbitmap_pinout(4),
-     	PMOD_VCCEN   => oledbitmap_pinout(5),
-       	PMOD_EN      => oledbitmap_pinout(6)
-        );
+	      	PMOD_CS      => oledbitmap_pinout(0),
+	  		PMOD_MOSI    => oledbitmap_pinout(1),
+	       	PMOD_SCK     => oledbitmap_pinout(2),
+	    	PMOD_DC      => oledbitmap_pinout(3),
+	       	PMOD_RES     => oledbitmap_pinout(4),
+	     	PMOD_VCCEN   => oledbitmap_pinout(5),
+	       	PMOD_EN      => oledbitmap_pinout(6)
+		);
 
 
-      -- OLED Nibble
-	plasma_olednibble: PmodOLEDrgb_nibblemap
-    Generic map (		CLK_FREQ_HZ => CLK_FREQ_HZ,
-                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
-                  	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
-    Port map (clk          => clk,
-       	  reset        => olednibblemap_reset,
+	      -- OLED Nibble
+		plasma_olednibble: PmodOLEDrgb_nibblemap
+	    Generic map (		CLK_FREQ_HZ => CLK_FREQ_HZ,
+		          	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+		          	LEFT_SIDE   => LEFT_SIDE)           -- True if the Pmod is on the left side of the board
+	    Port map (clk          => clk,
+	       	  reset        => olednibblemap_reset,
 
-          nibble_write => olednibblemap_valid,
-          nibble_col   => cpu_data_w(3 downto 0),
-          nibble_row   => cpu_data_w(10 downto 8),
-          nibble       => cpu_data_w(19 downto 16),
-          ready        => olednibblemap_output(0),
+		  nibble_write => olednibblemap_valid,
+		  nibble_col   => cpu_data_w(3 downto 0),
+		  nibble_row   => cpu_data_w(10 downto 8),
+		  nibble       => cpu_data_w(19 downto 16),
+		  ready        => olednibblemap_output(0),
 
-          PMOD_CS      => olednibblemap_pinout(0),
-  		  PMOD_MOSI    => olednibblemap_pinout(1),
-       	  PMOD_SCK     => olednibblemap_pinout(2),
-    	  PMOD_DC      => olednibblemap_pinout(3),
-       	  PMOD_RES     => olednibblemap_pinout(4),
-     	  PMOD_VCCEN   => olednibblemap_pinout(5),
-       	  PMOD_EN      => olednibblemap_pinout(6)
-          );
+		  PMOD_CS      => olednibblemap_pinout(0),
+	  		  PMOD_MOSI    => olednibblemap_pinout(1),
+	       	  PMOD_SCK     => olednibblemap_pinout(2),
+	    	  PMOD_DC      => olednibblemap_pinout(3),
+	       	  PMOD_RES     => olednibblemap_pinout(4),
+	     	  PMOD_VCCEN   => olednibblemap_pinout(5),
+	       	  PMOD_EN      => olednibblemap_pinout(6)
+		  );
 
 
-      -- OLED Sigplot
-	plasma_sigplot: PmodOLEDrgb_sigplot
-    Generic map (	CLK_FREQ_HZ => CLK_FREQ_HZ,
-                  	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
-                  	LEFT_SIDE   => LEFT_SIDE,
-                  	MAX_ON_TOP => MAX_ON_TOP)
-    Port map (
-    	  clk          => clk,
-       	  reset        => oledsigplot_reset,
+	      -- OLED Sigplot
+		plasma_sigplot: PmodOLEDrgb_sigplot
+	    Generic map (	CLK_FREQ_HZ => CLK_FREQ_HZ,
+		          	PARAM_BUFF  => True,            -- necessary because we connect CPU bus directly and there is no solution to get it buffered
+		          	LEFT_SIDE   => LEFT_SIDE,
+		          	MAX_ON_TOP => MAX_ON_TOP)
+	    Port map (
+	    	  clk          => clk,
+	       	  reset        => oledsigplot_reset,
 
-          sample       => cpu_data_w(5 downto 0),
-          sample_en    => oledsigplot_valid,
-          sample_num   => cpu_data_w(9 downto 8),
-          disp_shift   => '0',
+		  sample       => cpu_data_w(5 downto 0),
+		  sample_en    => oledsigplot_valid,
+		  sample_num   => cpu_data_w(9 downto 8),
+		  disp_shift   => '0',
 
-          ready        => oledsigplot_output(0),
+		  ready        => oledsigplot_output(0),
 
-          PMOD_CS      => oledsigplot_pinout(0),
-  	  PMOD_MOSI    => oledsigplot_pinout(1),
-       	  PMOD_SCK     => oledsigplot_pinout(2),
-    	  PMOD_DC      => oledsigplot_pinout(3),
-       	  PMOD_RES     => oledsigplot_pinout(4),
-     	  PMOD_VCCEN   => oledsigplot_pinout(5),
-       	  PMOD_EN      => oledsigplot_pinout(6)
-          );
+		  PMOD_CS      => oledsigplot_pinout(0),
+	  	  PMOD_MOSI    => oledsigplot_pinout(1),
+	       	  PMOD_SCK     => oledsigplot_pinout(2),
+	    	  PMOD_DC      => oledsigplot_pinout(3),
+	       	  PMOD_RES     => oledsigplot_pinout(4),
+	     	  PMOD_VCCEN   => oledsigplot_pinout(5),
+	       	  PMOD_EN      => oledsigplot_pinout(6)
+		  );
+
+		oled_pinout <= oledcharmap_pinout when oled_mux(3 downto 0) = "0001" else
+		       	oledbitmap_pinout when oled_mux(3 downto 0) = "0010" else
+		       	oledterminal_pinout when oled_mux(3 downto 0) = "0011" else
+		       	olednibblemap_pinout when oled_mux(3 downto 0) = "0100" else
+		       	oledsigplot_pinout when oled_mux(3 downto 0) = "0101" else
+		       	unaffected;
+	end generate;
+
+	rgb_oled_gen_disabled: if eRGBOLED = '0' generate
+		oled_pinout <= (others => 'Z');
+	end generate;
 
 	OLED_PMOD_CS    <= oled_pinout(0);
 	OLED_PMOD_MOSI  <= oled_pinout(1);
@@ -1302,13 +1331,6 @@ begin  --architecture
 	OLED_PMOD_RES   <= oled_pinout(4);
 	OLED_PMOD_VCCEN <= oled_pinout(5);
 	OLED_PMOD_EN    <= oled_pinout(6);
-
-	oled_pinout <= 	oledcharmap_pinout when oled_mux(3 downto 0) = "0001" else
-       	oledbitmap_pinout when oled_mux(3 downto 0) = "0010" else
-       	oledterminal_pinout when oled_mux(3 downto 0) = "0011" else
-       	olednibblemap_pinout when oled_mux(3 downto 0) = "0100" else
-       	oledsigplot_pinout when oled_mux(3 downto 0) = "0100" else
-       	unaffected;
 
 	process (reset, clk)
 	begin
