@@ -8,8 +8,9 @@
 - [Prérequis](#prerequis)
 	- [Configuration](#configuration)
 	- [Ajout de nouveaux PMODs](#ajout-de-nouveaux-pmods)
-	- [Makefile](#makefile)
+	- [Build system](#build-system)
 - [Manuel d'utilisation des périphériques sur la carte NEXYS 4](#manuel-dutilisation-des-peripheriques-sur-la-carte-nexys-4)
+  - [Boutons](#boutons)
   - [Afficheur sept segments](#afficheur-sept-segments)
   - [Switchs & LEDs](#switchs-&-leds)
 - [Module de gestion de l'I2C](#module-de-gestion-de-li2c)
@@ -56,11 +57,133 @@ Pour terminer, si l'ensemble des instructions précédentes ont bien été suivi
 
 **[`^        back to top        ^`](#)**
 
-### Makefile
+### Build system
+
+Le build system utilisé pour le SoC Plasma repose sur le `Makefile` principal qui prend en charge l'ensemble des actions récurrentes relatives au Plasma. 
+
+La liste des fichiers VHDL est définie avec la variable `PLASMA_SOC_FILES`, qui est utilisée pour générer les instructions de synthèse du design. 
+
+Plusieurs paramètres peuvent être configurés au moyen de variables makes passées en argument à la commande :
+* `CONFIG_PROJECT` : le projet à utiliser, défaut : `hello`
+* `CONFIG_TARGET` : la cible à utiliser (`nexys4_DDR`, `nexys4`), défaut : `nexys4_DDR` 
+* `CONFIG_PART` : le FPGA à cibler, défaut : `xc7a100tcsg324-1`
+* `CONFIG_SERIAL` : le port série à utiliser pour envoyer le projet, défaut : `/dev/ttyUSB1`
+
+On peut de même activer ou désactiver la prise en charge des différents contrôleurs (qui sont tous activés par défaut) : `CONFIG_UART`, `CONFIG_BUTTONS`, `CONFIG_RGB_OLED`, `CONFIG_SWITCH_LED`, `CONFIG_SEVEN_SEGMENTS`, `CONFIG_I2C`.
+
+Les différentes cibles possibles pour `make` sont présentées :
+* `send` : Envoi du binaire du projet vers le Plasma par UART
+* `flash` : Programmation du FPGA par JTAG avec OpenOCD
+* `plasma` : Préparation du bitstream du SoC Plasma
+* `simulation` : Simulation du SoC Plasma avec le projet spécifié
+* `clean` : Nettoyage des fichiers temporaires
+
+Des cibles spécifiques pour chacun des projets existent également.
+
+D'autres cibles correspondent à des fichiers internes nécessaires à la préparation du SoC Plasma, tels que les différents outils :
+* `convert_bin` : Conversion du format binaire des exécutables MIPS
+* `programmer` : Outil d'envoi des binaires des exécutables vers le Plasma par UART
+
+#### Ajout d'un contrôleur
+
+Afin d'ajouter un contrôleur au build system, on définit dans un premier temps une variable de configuration associée à une valeur de *generic* en VHDL :
+> CONFIG_BUTTONS ?= yes
+
+Et on ajoute dans un second temps un bloc associant la configuration au *generic* :
+>ifeq ($(CONFIG_BUTTONS),yes)  
+>PLASMA_SOC_GENERICS += eButtons=1'b1  
+>PLASMA_SOC_FILES += buttons.vhd  
+>else  
+>PLASMA_SOC_GENERICS += eButtons=1'b0  
+>endif
+
+Le generic devra par la suite être répercuté dans les fichiers `plasma.vhd`, `top_plasma.vhd` et `tbench.vhd`. Sa valeur par défaut sera (à priori) placée à 1. Un bloc spécifique à l'instantiation du composant sera alors placée dans le fichier `plasma.vhd` tel que :
+>	buttons_gen_enabled: if eButtons = '1' generate  
+>		plasma_buttons_controller: buttons_controller  
+>		port map(  
+>			 clock          => clk,  
+>			 reset        => reset,  
+>			 buttons_access => enable_buttons,  
+>			 btnC => btnC,  
+>			 btnU => btnU,  
+>			 btnD => btnD,  
+>			 btnL => btnL,  
+>			 btnR => btnR,  
+>			 buttons_values => buttons_values,  
+>			 buttons_change => buttons_change  
+>		);  
+>	end generate;  
+>  
+>	buttons_gen_disabled: if eI2C = '0' generate  
+>		buttons_values <= ZERO;  
+>		buttons_change <= ZERO;  
+>	end generate;
+
+On s'attachera en particulier à connecter les registres associés au contrôleur quand celui-ci est désactivé ainsi qu'à associer des valeurs (préférablement 'Z') aux sorties.
+
+#### Ajout d'un projet
+
+Pour ajouter un projet au build system, on commence tout d'abord par définir un bloc spécifiant les sources et les objets :
+>BUTTONS = $(BIN)/buttons.bin  
+>BUTTONS_HDL = $(BIN)/buttons.txt  
+>BUTTONS_FILES = main.c  
+>BUTTONS_SOURCES = $(addprefix $(C)/buttons/Sources/,$(BUTTONS_FILES))  
+>BUTTONS_OBJECTS = $(addprefix $(OBJ)/buttons/,$(BUTTONS_FILES:.c=.o))  
+>BUILD_DIRS += $(OBJ)/buttons  
+>BUILD_BINS += $(BIN)/buttons.bin  
+>PROJECTS += $(BUTTONS)
+
+Et on met en place l'association du projet par défaut si c'est celui-ci qui est sélectionné :
+>else ifeq ($(CONFIG_PROJECT),buttons)  
+>PROJECT = $(BUTTONS)  
+>PROJECT_HDL = $(BUTTONS_HDL)
+
+On ajoute enfin les blocs de prise en charge de la compilation du projet à la fois pour l'exécution en RAM ou en ROM au sein du design (utilisé en particulier pour la simulation) :
+>$(BUTTONS_OBJECTS): $(OBJ)/buttons/%.o: $(C)/buttons/Sources/%.c | $(BUILD_DIRS)  
+>	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<  
+>  
+>$(BUTTONS): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)  
+>	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/buttons/buttons.map -s -N -o $(OBJ)/buttons/buttons.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)  
+>	$(CONVERT_BIN) $(OBJ)/buttons/buttons.axf $(OBJ)/buttons/buttons.bin $(OBJ)/buttons/buttons.txt  
+>	cp $(OBJ)/buttons/buttons.bin $@  
+>  
+>$(BUTTONS_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)  
+>	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/buttons/buttons_hdl.map -s -N -o $(OBJ)/buttons/buttons_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)  
+>	$(CONVERT_BIN) $(OBJ)/buttons/buttons_hdl.axf $(OBJ)/buttons/buttons_hdl.bin $(OBJ)/buttons/buttons_hdl.txt  
+>	cp $(OBJ)/buttons/buttons_hdl.txt $@  
+>  
+>.PHONY: buttons  
+>buttons: $(BUTTONS) $(BUTTONS_HDL)
 
 **[`^        back to top        ^`](#)**
 
 ## Manuel d'utilisation des périphériques sur la carte NEXYS 4
+
+### Boutons
+
+La carte Nexys 4 est équipée de boutons poussoirs qui sont prise en charge par un contrôleur dédié. On peut ainsi relever l'état des boutons et détecter un changement d'état.
+
+#### Fichiers VHDL
+
+Les différents fichiers VHDL qui décrivent la gestion des boutons sont les suivants :
+- `plasma.vhd` dans lequel est instancié le contrôleur des boutons et le cablage vers le composant.
+- `buttons.vhd` contrôleur pour la prise en charge des boutons.
+
+#### Adresse associée au module
+
+Deux adresses sont utilisées pour le contrôleur de boutons :
+- `0x40000100` pour la valeur de l'état des boutons
+- `0x40000104` pour la détection du changement de l'état des boutons (XOR avec la valeur précédente)
+
+#### Schéma du contrôleur
+
+<p align="center">
+  <img src="SRC/buttons.png" width="400px">
+</p>
+
+**[`^        back to top        ^`](#)**
+
+-----------------
 
 ### Afficheur sept segments
 La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anode commune. Il est possible d'obtenir un retour d'information sur ces afficheurs. Le bloc VHDL ajouté à l'architecture du plasma pour la gestion des afficheurs sept segments est semblable aux blocs coprocesseur présents dans le PLASMA.
@@ -69,8 +192,7 @@ La carte Nexys 4 est équipée de huit afficheurs sept segments, cablés en anod
 Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segment sont les suivants :
 - `plasma.vhd` dans lequel est instancié le bloc de gestion de l'afficheur sept segments, les entrées/sorties et signaux pilotant le bloc y sont cablés.
 - `ctrl_7seg.vhd` bloc principal où les différents sous-blocs nécessaires à l'affichage sont cablés.
-- `mod_7seg.vhd`
-- `mux_7seg.vhd`
+- `mod_7seg.vhd` pour la préparation du signal vers les 7 segments
 
 #### Adresse associée au module
 Pour intérgir avec les afficheurs sept-segments une adresse est réservée.
@@ -204,76 +326,5 @@ Dans cette partie on effectue les mesures à chaque tour de boucle, dans notre c
 - Attente de 67 ms au moins pour une fréquence de 15 Hz
 
 **Fin de boucle**
-
-**[`^        back to top        ^`](#)**
-
-## Manuel d'utilisation de certains PMODs
-
-### PMOD Oled-RGB
-
-<p align="center">
-  <img src="SRC/OLEDrgb.png" alt="Oled-RGB" height="250" width="250">
-</p>
-
-Le PMOD Oled-RGB permet l'affichage de caractères ASCII sous 8 lignes X 16 colonnes. Il permet aussi de réaliser un affichage Bitmap sous 96X64 avec 16 bits/pixel. Un module d'affichage de jusqu'à 4 courbes a également été instancié (non testé encore).
-L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bornat, détaillé à l'adresse suivante: http://bornat.vvv.enseirb.fr/wiki/doku.php?id=en202:pmodoledrgb.
-
-Chaque module possède une adresse d'activation sur un bit (*oledXXXXXX_valid*) qui passe à '1' au moment d'une lecture ou d'une écriture à l'adresse correspondante au module.
-
-**[`^        back to top        ^`](#)**
-
------------------
-
-#### Module Charmap
-Le module **Charmap** permet l'affichage sur l'écran Oled-RGB d'un caractère ASCII à une position donnée (ligne et colone).
-Ce module du PMOD Oled-RGB est adressable aux adresses suivantes:
-  * READ/WRITE: OLEDCHARMAP_RW    --> 0x400000A8
-  * RESET:      OLEDCHARMAP_RST   --> 0x400000A0
-
-Avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Charmap*. Ainsi on lit à l'adresse définit par le macro *OLEDCHARMAP_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
-Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDCHARMAP_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
-L'allure de la trame à envoyer est la suivante:
-  * la valeur hexadecimal du caractère sur les bits 7 à 0.
-  * la valeur hexadecimal de la ligne sur les bits 10 à 8.
-  * la valeur hexadecimal de la colonne sur les bits 19 à 16.
-
-Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledcharmap/Sources/*.
-Pour faciliter l'écriture de la trame à envoyé, une fonction printCar() a été mise en place, prenant en paramètre le caractère, la ligne et la colonne: *void printCar(char row, char col, char car)*.
-
-**[`^        back to top        ^`](#)**
-
------------------
-
-#### Module Terminal
-Le module **Terminal** permet l'affichage sur l'écran Oled-RGB de caractères ASCII en prenant en charge la position. Il est donc plus adapté que le module *Charmap* pour écrire un buffer contenant plusieurs caractères.
-Ce module du PMOD Oled-RGB utilise le précedent module *Charmap* et est adressable aux adresses suivantes:
-  * READ/WRITE: OLEDTERMINAL_RW   --> 0x400000A4
-  * RESET:      OLEDTERMINAL_RST  --> 0x400000AC
-
-De la même manière que pour le module *Charmap*, avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Terminal*. Ainsi on lit à l'adresse définit par le macro *OLEDTERMINAL_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
-Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDTERMINAL_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
-L'allure de la trame à envoyer est la suivante:
-  * la valeur hexadecimal du caractère sur les bits 7 à 0.
-  * le bit 24 à '1' pour effacer entièrement l'écran en noir (couleur par défaut): *screen_clear*.
-
-Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledterminal/Sources/*.
-
-**[`^        back to top        ^`](#)**
-
------------------
-
-#### Module Bitmap
-Le module **Bitmap** du PMOD Oled-RGB est adressable aux adresses suivantes:
-  * READ/WRITE: OLEDBITMAP_RW     --> 0x400000B0
-  * RESET:      OLEDBITMAP_RST    --> 0x400000B8
-
-Pour ce module, il n'est pas nécessaire d'attendre que l'écran soit prêt avant de lui envoyer la trame. Pour colorier un pixel, il suffit d'écrire directement à la bonne adresse (*OLEDBITMAP_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
-L'allure de la trame à envoyer est la suivante:
-  * la valeur hexadecimal de la colonne sur les bits 6 à 0.
-  * la valeur hexadecimal de la ligne sur les bits 13 à 8.
-  * la valeur hexadecimal de la couleur du pixel sur les bits 16 à 31.
-On peut cependant raccourcir à 8 bits la trame de la valeur de la couleur du pixel en modifiant la valeur de BPP dans la description VHDL (*plasma.vhd*). Cette valeur correspond à la profondeur colorimétrique et elle est définit par défaut à 16 bpp ce qui équivaut au mode *Highcolor*.
-
-Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledbitmap/Sources/*.
 
 **[`^        back to top        ^`](#)**
