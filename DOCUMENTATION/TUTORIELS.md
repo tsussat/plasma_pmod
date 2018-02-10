@@ -51,7 +51,7 @@ Puis on lance la simulation :
 
 Une fois la simulation terminée, on voit apparaître sur l'écran la chaîne `Hello world !`.
 
-**Astuce** : La première étape est automatiquement exécutée par l'appel à la cible `simulation`, on peut donc se contenter de la première étape.
+**Astuce** : La première étape est automatiquement exécutée par l'appel à la cible `simulation`, on peut donc se contenter de la seconde étape.
 
 **Astuce** : On peut sélectionner le projet à intégrer en passant `CONFIG_PROJECT` à la cible `simulation` de *make*, par exemple :
 > make simulation CONFIG_PROJECT=buttons
