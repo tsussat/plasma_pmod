@@ -118,7 +118,9 @@ On peut observer la sortie de l'exécution par le port série UART du Plasma, qu
 Comme l'exécution a déjà débuté, aucun message ne s'affiche. Un appui sur le bouton *CPU RESET* de la carte permet de redémarrer l'exécution et ainsi d'afficher la sortie du bootloader.
 
 Le bootloader est maintenant en attente de données depuis le port série. On va y envoyer le programme choisi, avec la cible `send` du *Makefile* :
-> make send
+> make send CONFIG_PROJECT=hello
+
+Par la suite, on adaptera la valeur de la variable `CONFIG_PROJECT` pour qu'elle corresponde au nom du projet que l'on souhaite envoyer.
 
 On pourra au besoin ajuster la variable `CONFIG_SERIAL` pour indiquer un port série différent.
 
@@ -126,12 +128,141 @@ Une fois l'envoi termine, l'exécution du programme débute et on en observe la 
 
 ## Projets
 
+Différents projet fournis et mettent en œuvre la prise en charge des différents contrôleurs intégrés au SoC Plasma.
+
 ### Buttons
+
+Le projet `buttons` prend en charge le contrôleur de boutons poussoirs (situés en haut à droite des afficheurs sept-segments).
+
+* Compilation: `make projet CONFIG_PROJECT=buttons`
+* Chargement par UART: `make send CONFIG_PROJECT=buttons`
+* Code: `C/buttons/Sources/main.c`
+
+Le code `C/buttons/Sources/main.c` va dans un premier temps vérifier si un changement dans l'état des boutons a été détecté (registre `BUTTONS_CHANGE` différent de 0) et réitérer dans la boucle principale si ce n'est pas le cas :
+> if (MemoryRead(BUTTONS_CHANGE) == 0)  
+> 	continue
+
+Par la suite, on peut récupérer l'état des boutons dans le registre `BUTTONS_VALUES` (le changement instantané d'état est donné par le registre `BUTTONS_CHANGE`). La valeur ainsi récupérée est alors affichée sur le port série.
 
 ### Switch/LEDs
 
+Le projet `switch_led` prend en charge le contrôleur dédié aux switchs et aux LEDs (sités en bas de la carte).
+
+* Compilation: `make projet CONFIG_PROJECT=switch_led`
+* Chargement par UART: `make send CONFIG_PROJECT=switch_led`
+* Code: `C/switch_led/Sources/main.c`
+
+Il s'agit dans un premier temps de réinitialiser le contrôleur par une écriture dans le registre `CTRL_SL_RST`. Par la suite, on va lire les valeurs des switchs par une lecture dans le registre `CTRL_SL_RW` et on va écrire cette valeur (pour les LEDs associées) complétée par son décalage de 16 bits vers la gauche (pour les composantes de chaque LED RGB). On affiche de plus la valeur.
+
+La fonction `sleep` permet de délayer l'exécution du nombre de millisecondes précisé.
+
 ### Seven Segments
 
+Le projet `seven_segments` prend en charge le contrôleur dédié aux afficheurs 7 segments.
+
+* Compilation: `make projet CONFIG_PROJECT=seven_segments`
+* Chargement par UART: `make send CONFIG_PROJECT=seven_segments`
+* Code: `C/seven_segments/Sources/main.c`
+
+On va utiliser à la fois le contrôleur de switchs présenté précédemment et le contrôleur dédié aux afficheurs sept segments. On initialise les contrôleurs avec des écritures dans les registres dédiés :
+> MemoryWrite(SEVEN_SEGMENT_RST, 1);  
+> MemoryWrite(CTRL_SL_RST, 1);
+
+Une première boucle affiche l'incrémentation d'une valeur de 0 à 31 sur les afficheurs, avec un pause de 250 ms entre chaque itération.
+
+Une deuxième boucle affiche la valeur sur 16 bits qui correspond à l'état des switchs sur chacun des afficheurs. L'écriture sur les afficheurs est réalisée par une écriture dans le registre `SEVEN_SEGMENT_REG` avec le valeur sur 32 bits contenant l'état des switchs sur chaque paire de 16 bits :
+> MemoryWrite(SEVEN_SEGMENT_REG, sw << 16 | sw);
+
+La fonction `sleep` permet de délayer l'exécution du nombre de millisecondes précisé.
+
 ### I2C
+
+Le projet `i2c` prend en charge les contrôleurs i2c dédiés au capteur de température externe et aux PMODs I2C connectes sur le port **JA**.
+
+* Compilation: `make projet CONFIG_PROJECT=i2c`
+* Chargement par UART: `make send CONFIG_PROJECT=i2c`
+* Code: `C/i2c/Sources/main.c`, `C/i2c/Sources/i2c.c`
+
+Les fonctions spécifiques à la prise en charge du contrôleur I2C sur regroupées dans le fichier `i2c.c`. Ces fonctions sont prêtes à être utilisées pour la prise en charge des composants présentés mais elles peuvent être utilisées avec tout contrôleur I2C.
+
+Le contrôleur I2C implémente un comportement de maître pour communiquer avec les esclaves présents sur le bus et adressés par une adresse distincte.
+
+#### Considérations électriques
+
+Le bus I2C fonctionne par une paire de deux signaux bi-directionnels :
+* **SCL** : pour l'horloge qui est générée par le maître ;
+* **SDA** : pour les données, alternativement utilisées par le maître et l'esclave
+
+Il s'agit ainsi d'un bus half-duplex. Le bus doit être porté à un état logique haut lorsqu'il n'y a pas d'activité : deux résistances de tirage (pull-up) sont donc nécessaires. Des résistances de tirage internes au FPGA sont utilisées sur chacune des lignes, mais celles-si sont trop faibles pour certains composants, qui demandent alors des résistances de tirage externes. Une valeur proche de 10 kOhm est en général adaptée.
+
+#### Capteur de température
+
+Le capteur de température présent sur la carte Nexys 4 est pris en charge au travers de la fonction `tmp_measure` dont on précise le fonctionnement :
+* On sélectionne le contrôleur I2C à utiliser (TMP) : `select_mode(SELECT_TMP);`
+* On définit l'adresse du composant et la lecture/écriture : `address_set(SLAVE_ADDR_TMP3, READ);`
+* On émet la condition de démarrage et l'adresse et on lit la réponse : `start();`
+* On lit deux données depuis le composant : `receive_data((unsigned int *) &buf, 2);`
+* On émet la condition de fin : `stop();`
+
+La valeur ainsi reçue est alors placée sur 16 bits (on lit successivement le MSB et le LSB sur 8 bits) :
+>     value = (short) (buf[0] << 8) + buf[1];
+
+Et on adapte cette valeur pour obtenir la température en millidegré Celcius :
+>    value = (value >> 3) * 625 / 10; // m degC
+
+la valeur est ensuite affichée avec un délai de 500 ms entre chaque lecture.
+
+#### PMOD CMPS
+
+Le PMOD CMPS est un capteur de champ magnétique (compas) qui utilise le bus I2C.
+
+Le PMOD doit être relié à la carte Nexys 4 sur le port **JA**. Cependant, les cavaliers **JP1** et **JP2** doivent être présents (ils peuvent éventuellement être manquants mais les pins ne doivent pas être connectés au port JA de la Nexys 4). Un câble d'extension est donc nécessaire et doit être décalé de deux rangées de pins pour éviter les jumpers (ou le spins correspondants).
+
+Le câble doit par la suite être connecté au port JA avec deux rangées de pins de décalage, qui dépasseront du côté des inscriptions JA et 3V3.
+
+Ce PMOD est pris en charge au travers de la fonction `cmps_measure` dont on précise le fonctionnement.
+
+On va tout d'abord configurer certains registres pour activer la prise de mesures en continu :
+* On sélectionne le contrôleur I2C à utiliser (PMOD) : `select_mode(SELECT_PMOD);`
+* On définit l'adresse du composant et la lecture/écriture : `address_set(SLAVE_ADDRESS_CMPS, WRITE);`
+* On émet la condition de démarrage et l'adresse et on lit la réponse : `start();`
+* On écrit les données, qui correspondent tout d'abord à l'adresse du registre puis à la valeur à lui affecter:
+> send_data(0x00); // CRA register pointer  
+> send_data(0x70); // set values
+* On émet la condition de fin : `stop();`
+
+L'action est répétée pour plusieurs registres et on lit par la suite 6 valeurs avec un appel à `receive_data`. Ces valeurs sont ensuite reconstituées sur 16 bits (MSB reçu en premier) et affichées sur le port série. À la fin de la lecture, une écriture dans un registre permet de réinitialiser la position du registre pour la lecture afin de pouvoir à nouveau lire les registres des valeurs à la prochaine itération.
+
+la valeur est ensuite affichée avec un délai de 500 ms entre chaque lecture.
+
+#### PMOD Gyro
+
+Le PMOD Gyro est un capteur gyroscope qui utilise le bus I2C.
+
+Le PMOD doit être relié à la carte Nexys 4 sur le port **JA**. Des résistances de tirage externes sont nécessaires pour la prise en charge de ce PMOD : en effet, les résistances internes de la carte sont trop faibles et diminuent la taille du niveau haut d'horloge. Le PMOD doit être connecté par le connecteur **J2**, dont le pin le plus en bas (dans le sens du texte) correspond à VCC.
+
+Ce PMOD est pris en charge au travers de la fonction `gyro_measure` dont on précise le fonctionnement.
+
+On va tout d'abord configurer certains registres pour activer chacun des axes :
+* On sélectionne le contrôleur I2C à utiliser (PMOD) : `select_mode(SELECT_PMOD);`
+* On définit l'adresse du composant et la lecture/écriture : `address_set(SLAVE_ADDRESS_GYRO, WRITE);`
+* On émet la condition de démarrage et l'adresse et on lit la réponse : `start();`
+* On écrit les données, qui correspondent tout d'abord à l'adresse du registre puis à la valeur à lui affecter:
+>  send_data(0x20); // Select control register1
+>  send_data(0x0F); // Normal mode, X, Y, Z-Axis enabled
+* On émet la condition de fin : `stop();`
+
+Une deuxième écriture dans un autre registre de contrôle permet d'activer la prise de mesures en continu.
+
+La lecture des données se passe en en deux temps : on va spécifier l'adresse de chacun des registres à lire et lire un seul octet pour chaque registre : l'incrémentation du registre de lecture n'est pas automatique, au contraire du PMOD CMPS.
+
+Pour sélectionner l'adresse du registre :
+> send_data(40 + i); // data register
+
+Et pour lire un seul octet :
+> receive_data((unsigned int *) &buf[i], 1);
+
+On peut alors reconstruire les données (LSB en premier) sur 16 bits :
+> x = (short) (buf[1] << 8) + buf[0];
 
 ### RGB OLED
