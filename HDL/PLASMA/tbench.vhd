@@ -83,6 +83,19 @@ ARCHITECTURE logic OF tbench IS
     signal seg          : std_logic_vector(6 downto 0);
     signal an           : std_logic_vector(7 downto 0);
     
+signal i2c_sda_tmp  : std_logic;
+signal i2c_scl_tmp  : std_logic;
+signal i2c_sda_pmod : std_logic;
+signal i2c_scl_pmod : std_logic;
+
+signal OLED_PMOD_CS      	: STD_LOGIC;
+signal OLED_PMOD_MOSI    	: STD_LOGIC;
+signal OLED_PMOD_SCK     	: STD_LOGIC;
+signal OLED_PMOD_DC      	: STD_LOGIC;
+signal OLED_PMOD_RES     	: STD_LOGIC;
+signal OLED_PMOD_VCCEN   	: STD_LOGIC;
+signal OLED_PMOD_EN      	: STD_LOGIC;
+
 --component plasma is
 --   generic(memory_type : string := "XILINX_16X"; --"DUAL_PORT_" "ALTERA_LPM";
 --           log_file    : string := "UNUSED";
@@ -151,7 +164,11 @@ BEGIN  --architecture
 	    memory_type => memory_type,
 	    ethernet	=> '1',
 	    eUart	=> '1',
-	    eI2C	=> '1',
+	    eButtons    => '1',
+	    eRGBOLED    => '1',
+	    eSwitchLED  => '1',
+	    eSevenSegments => '1',
+	    eI2C        => '1',
 	    use_cache	=> '0',
 	    log_file	=> log_file
 	    )
@@ -205,7 +222,20 @@ BEGIN  --architecture
         btnL => btnL,
         btnR => btnR,
         btnD => btnD,  
-        
+
+	i2c_sda_tmp => i2c_sda_tmp,
+	i2c_scl_tmp => i2c_scl_tmp,
+	i2c_sda_pmod => i2c_sda_pmod,
+	i2c_scl_pmod => i2c_scl_pmod,
+
+	OLED_PMOD_CS	=> OLED_PMOD_CS,
+	OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
+	OLED_PMOD_SCK   => OLED_PMOD_SCK,
+	OLED_PMOD_DC    => OLED_PMOD_DC,
+	OLED_PMOD_RES   => OLED_PMOD_RES,
+	OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
+	OLED_PMOD_EN    => OLED_PMOD_EN,
+
 	    -- BLG END
 	   -- no_ddr_start    => no_ddr_start,
 	    --no_ddr_stop	    => no_ddr_stop,

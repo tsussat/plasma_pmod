@@ -163,34 +163,34 @@ end process;
 		RGB1_Green => RGB1_Green,
 		RGB1_Blue => RGB1_Blue,
 		RGB2_Red => RGB2_Red,
-        RGB2_Green => RGB2_Green,
-        RGB2_Blue => RGB2_Blue,
+ 		RGB2_Green => RGB2_Green,
+       		RGB2_Blue => RGB2_Blue,
 
-        seg         => seg,
-        an          => an,
+		seg         => seg,
+		an          => an,
 
-        btnCpuReset => btnCpuReset,
-        btnC => btnC,
-        btnU => btnU,
-        btnL => btnL,
-        btnR => btnR,
-        btnD => btnD,
+		btnCpuReset => btnCpuReset,
+		btnC => btnC,
+		btnU => btnU,
+		btnL => btnL,
+		btnR => btnR,
+		btnD => btnD,
 
-	i2c_sda_tmp => i2c_sda_tmp,
-	i2c_scl_tmp => i2c_scl_tmp,
-	i2c_sda_pmod => i2c_sda_pmod,
-	i2c_scl_pmod => i2c_scl_pmod,
+		i2c_sda_tmp => i2c_sda_tmp,
+		i2c_scl_tmp => i2c_scl_tmp,
+		i2c_sda_pmod => i2c_sda_pmod,
+		i2c_scl_pmod => i2c_scl_pmod,
 
-	OLED_PMOD_CS	=> OLED_PMOD_CS,
-	OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
-	OLED_PMOD_SCK   => OLED_PMOD_SCK,
-	OLED_PMOD_DC    => OLED_PMOD_DC,
-	OLED_PMOD_RES   => OLED_PMOD_RES,
-	OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
-	OLED_PMOD_EN    => OLED_PMOD_EN,
+		OLED_PMOD_CS	=> OLED_PMOD_CS,
+		OLED_PMOD_MOSI  => OLED_PMOD_MOSI,
+		OLED_PMOD_SCK   => OLED_PMOD_SCK,
+		OLED_PMOD_DC    => OLED_PMOD_DC,
+		OLED_PMOD_RES   => OLED_PMOD_RES,
+		OLED_PMOD_VCCEN => OLED_PMOD_VCCEN,
+		OLED_PMOD_EN    => OLED_PMOD_EN,
 
-	gpio0_out       => open,
-	gpioA_in        => x"00000000" --open
+		gpio0_out       => open,
+		gpioA_in        => x"00000000" --open
 	);
 
 

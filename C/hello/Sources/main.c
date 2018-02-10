@@ -4,8 +4,8 @@
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
-int main(int argc, char ** argv) {
-
+int main(int argc, char ** argv)
+{
 	int H = 480; // H of the VGA screen in pixel
 	int W = 640; // W of the VGA screen in pixel
 

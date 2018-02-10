@@ -9,7 +9,8 @@ LD_MIPS ?= mips-elf-ld
 # Compiler
 
 CFLAGS_MIPS = -O3 -Wall -c -s -funroll-loops -mips1 -mtune=mips1 -msoft-float -std=c99 -DVHDL_SIMULATION
-ENTRY = 0x10000000
+ENTRY_LOAD = 0x10000000
+ENTRY_HDL = 0x0
 
 # Directories
 
@@ -18,7 +19,7 @@ TOP = .
 C = $(TOP)/C
 HDL = $(TOP)/HDL
 BUILD = $(TOP)/BUILD
-SIMU = $(TOP)/SIMU
+SIMULATION = $(TOP)/SIMULATION
 SYNTHESIS = $(TOP)/SYNTHESIS
 SCRIPTS = $(TOP)/SCRIPTS
 
@@ -27,7 +28,7 @@ TOOLS = $(C)/tools
 OBJ = $(TOP)/OBJ
 BIN = $(TOP)/BIN
 
-BUILD_DIRS =
+BUILD_DIRS = $(BIN) $(OBJ)
 BUILD_BINS =
 
 # Tools
@@ -52,13 +53,14 @@ SHARED_OBJECTS = $(addprefix $(OBJ)/shared/,$(SHARED_FILES:.c=.o))
 SHARED_OBJECTS_ASM = $(addprefix $(OBJ)/shared/,$(SHARED_FILES_ASM:.asm=.o))
 BUILD_DIRS += $(OBJ)/shared
 
-BOOT_LOADER = $(OBJ)/boot_loader/code_bin.txt
+BOOT_LOADER_HDL = $(BIN)/boot_loader.txt
 BOOT_LOADER_FILES = main.c
 BOOT_LOADER_SOURCES = $(addprefix $(C)/boot_loader/Sources/,$(BOOT_LOADER_FILES))
 BOOT_LOADER_OBJECTS = $(addprefix $(OBJ)/boot_loader/,$(BOOT_LOADER_FILES:.c=.o))
 BUILD_DIRS += $(OBJ)/boot_loader
 
 HELLO = $(BIN)/hello.bin
+HELLO_HDL = $(BIN)/hello.txt
 HELLO_FILES = main.c
 HELLO_SOURCES = $(addprefix $(C)/hello/Sources/,$(HELLO_FILES))
 HELLO_OBJECTS = $(addprefix $(OBJ)/hello/,$(HELLO_FILES:.c=.o))
@@ -67,6 +69,7 @@ BUILD_BINS += $(BIN)/hello.bin
 PROJECTS += $(HELLO)
 
 MANDELBROT = $(BIN)/mandelbrot.bin
+MANDELBROT_HDL = $(BIN)/mandelbrot.txt
 MANDELBROT_FILES = main.c
 MANDELBROT_SOURCES = $(addprefix $(C)/mandelbrot/Sources/,$(MANDELBROT_FILES))
 MANDELBROT_OBJECTS = $(addprefix $(OBJ)/mandelbrot/,$(MANDELBROT_FILES:.c=.o))
@@ -75,6 +78,7 @@ BUILD_BINS += $(BIN)/mandelbrot.bin
 PROJECTS += $(MANDELBROT)
 
 BUTTONS = $(BIN)/buttons.bin
+BUTTONS_HDL = $(BIN)/buttons.txt
 BUTTONS_FILES = main.c
 BUTTONS_SOURCES = $(addprefix $(C)/buttons/Sources/,$(BUTTONS_FILES))
 BUTTONS_OBJECTS = $(addprefix $(OBJ)/buttons/,$(BUTTONS_FILES:.c=.o))
@@ -83,6 +87,7 @@ BUILD_BINS += $(BIN)/buttons.bin
 PROJECTS += $(BUTTONS)
 
 RGB_OLED = $(BIN)/rgb_oled.bin
+RGB_OLED_HDL = $(BIN)/rgb_oled.txt
 RGB_OLED_FILES = main.c
 RGB_OLED_SOURCES = $(addprefix $(C)/rgb_oled/Sources/,$(RGB_OLED_FILES))
 RGB_OLED_OBJECTS = $(addprefix $(OBJ)/rgb_oled/,$(RGB_OLED_FILES:.c=.o))
@@ -91,6 +96,7 @@ BUILD_BINS += $(BIN)/rgb_oled.bin
 PROJECTS += $(RGB_OLED)
 
 SWITCH_LED = $(BIN)/switch_led.bin
+SWITCH_LED_HDL = $(BIN)/switch_led.txt
 SWITCH_LED_FILES = main.c
 SWITCH_LED_SOURCES = $(addprefix $(C)/switch_led/Sources/,$(SWITCH_LED_FILES))
 SWITCH_LED_OBJECTS = $(addprefix $(OBJ)/switch_led/,$(SWITCH_LED_FILES:.c=.o))
@@ -99,6 +105,7 @@ BUILD_BINS += $(BIN)/switch_led.bin
 PROJECTS += $(SWITCH_LED)
 
 SEVEN_SEGMENTS = $(BIN)/seven_segments.bin
+SEVEN_SEGMENTS_HDL = $(BIN)/seven_segments.txt
 SEVEN_SEGMENTS_FILES = main.c
 SEVEN_SEGMENTS_SOURCES = $(addprefix $(C)/seven_segments/Sources/,$(SEVEN_SEGMENTS_FILES))
 SEVEN_SEGMENTS_OBJECTS = $(addprefix $(OBJ)/seven_segments/,$(SEVEN_SEGMENTS_FILES:.c=.o))
@@ -107,6 +114,7 @@ BUILD_BINS += $(BIN)/seven_segments.bin
 PROJECTS += $(SEVEN_SEGMENTS)
 
 I2C = $(BIN)/i2c.bin
+I2C_HDL = $(BIN)/i2c.txt
 I2C_FILES = main.c i2c.c
 I2C_SOURCES = $(addprefix $(C)/i2c/Sources/,$(I2C_FILES))
 I2C_OBJECTS = $(addprefix $(OBJ)/i2c/,$(I2C_FILES:.c=.o))
@@ -114,9 +122,10 @@ BUILD_DIRS += $(OBJ)/i2c
 BUILD_BINS += $(BIN)/i2c.bin
 PROJECTS += $(I2C)
 
-# HDL
+# Plasma SoC
 
 PLASMA_SOC = $(BIN)/plasma.bit
+PLASMA_SOC_BOOTROM = $(PLASMA)/code_bin.txt
 PLASMA_SOC_FLOW = $(OBJ)/plasma/plasma.tcl
 PLASMA_SOC_FILES = alu.vhd \
 	bus_mux.vhd \
@@ -143,14 +152,15 @@ PLASMA_SOC_FILES = alu.vhd \
 	vga_ctrl.vhd \
 	vgd_bitmap_640x480.vhd
 PLASMA_SOC_SOURCES = $(addprefix $(PLASMA)/,$(PLASMA_SOC_FILES))
-
-PLASMA_SIMULATION_FILES = tbench.vhd
-PLASMA_SIMULATION_SOURCES = $(addprefix $(PLASMA)/,$(PLASMA_SIMULATION_FILES))
-
 PLASMA_SOC_TOP = top_plasma
-BUILD_DIRS += $(OBJ)/plasma
 
-SIMU_TEST_BENCH = $(SIMU)/test_bench.prj
+PLASMA_SIMULATION_FLOW = $(OBJ)/plasma/simulation.tcl
+PLASMA_SIMULATION_FILES = tbench.vhd txt_util.vhd
+PLASMA_SIMULATION_SOURCES = $(addprefix $(PLASMA)/,$(PLASMA_SIMULATION_FILES))
+PLASMA_SIMULATION_TOP = tbench
+PLASMA_SIMULATION_TCL = $(SIMULATION)/simu_run.tcl
+
+BUILD_DIRS += $(OBJ)/plasma
 
 # Configuration
 
@@ -167,18 +177,25 @@ CONFIG_I2C ?= yes
 
 ifeq ($(CONFIG_PROJECT),hello)
 PROJECT = $(HELLO)
+PROJECT_HDL = $(HELLO_HDL)
 else ifeq ($(CONFIG_PROJECT),mandelbrot)
 PROJECT = $(MANDELBROT)
+PROJECT_HDL = $(MANDELBROT_HDL)
 else ifeq ($(CONFIG_PROJECT),buttons)
 PROJECT = $(BUTTONS)
+PROJECT_HDL = $(BUTTONS_HDL)
 else ifeq ($(CONFIG_PROJECT),rgb_oled)
 PROJECT = $(RGB_OLED)
+PROJECT_HDL = $(RGB_OLED_HDL)
 else ifeq ($(CONFIG_PROJECT),switch_led)
 PROJECT = $(SWITCH_LED)
+PROJECT_HDL = $(SWITCH_LED_HDL)
 else ifeq ($(CONFIG_PROJECT),seven_segments)
 PROJECT = $(SEVEN_SEGMENTS)
+PROJECT_HDL = $(SEVEN_SEGMENTS_HDL)
 else ifeq ($(CONFIG_PROJECT),i2c)
 PROJECT = $(I2C)
+PROJECT_HDL = $(I2C_HDL)
 endif
 
 PLASMA_SOC_GENERICS =
@@ -199,7 +216,7 @@ endif
 
 ifeq ($(CONFIG_RGB_OLED),yes)
 PLASMA_SOC_GENERICS += eRGBOLED=1'b1
-PLASMA_SOC_FILES += pmodoledrgb_bitmap.vhd pmodoledrgb_charmap.vhd pmodoledrgb_nibblemap.vhd pmodoledrgb_sigplot.vhd pmodoledrgb_terminal.vhd pmodoledrgb_charmap.vhd
+PLASMA_SOC_FILES += pmodoledrgb_bitmap.vhd pmodoledrgb_charmap.vhd pmodoledrgb_nibblemap.vhd pmodoledrgb_sigplot.vhd pmodoledrgb_terminal.vhd
 else
 PLASMA_SOC_GENERICS += eRGBOLED=1'b0
 endif
@@ -265,91 +282,134 @@ $(SHARED_OBJECTS_ASM): $(OBJ)/shared/%.o: $(C)/shared/%.asm | $(BUILD_DIRS)
 $(BOOT_LOADER_OBJECTS): $(OBJ)/boot_loader/%.o: $(C)/boot_loader/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
-$(BOOT_LOADER): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BOOT_LOADER_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext 0 -eentry -Map $(OBJ)/boot_loader/boot_loader.map -s -N -o $(OBJ)/boot_loader/boot_loader.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BOOT_LOADER_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/boot_loader/boot_loader.axf $(OBJ)/boot_loader/boot_loader.bin $@
+$(BOOT_LOADER_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BOOT_LOADER_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/boot_loader/boot_loader_hdl.map -s -N -o $(OBJ)/boot_loader/boot_loader_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BOOT_LOADER_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/boot_loader/boot_loader_hdl.axf $(OBJ)/boot_loader/boot_loader_hdl.bin $(OBJ)/boot_loader/boot_loader_hdl.txt
+	cp $(OBJ)/boot_loader/boot_loader_hdl.txt $@
 
 .PHONY: boot_loader
-boot_loader: $(BOOT_LOADER)
+boot_loader: $(BOOT_LOADER_HDL)
 
 $(HELLO_OBJECTS): $(OBJ)/hello/%.o: $(C)/hello/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(HELLO): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/hello/hello.map -s -N -o $(OBJ)/hello/hello.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/hello/hello.axf $@ $(OBJ)/hello/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/hello/hello.map -s -N -o $(OBJ)/hello/hello.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/hello/hello.axf $(OBJ)/hello/hello.bin $(OBJ)/hello/hello.txt
+	cp $(OBJ)/hello/hello.bin $@
+
+$(HELLO_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/hello/hello_hdl.map -s -N -o $(OBJ)/hello/hello_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/hello/hello_hdl.axf $(OBJ)/hello/hello_hdl.bin $(OBJ)/hello/hello_hdl.txt
+	cp $(OBJ)/hello/hello_hdl.txt $@
 
 .PHONY: hello
-hello: $(HELLO)
+hello: $(HELLO) $(HELLO_HDL)
 
 $(MANDELBROT_OBJECTS): $(OBJ)/mandelbrot/%.o: $(C)/mandelbrot/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(MANDELBROT): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/mandelbrot/mandelbrot.map -s -N -o $(OBJ)/mandelbrot/mandelbrot.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/mandelbrot/mandelbrot.axf $@ $(OBJ)/mandelbrot/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/mandelbrot/mandelbrot.map -s -N -o $(OBJ)/mandelbrot/mandelbrot.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/mandelbrot/mandelbrot.axf $(OBJ)/mandelbrot/mandelbrot.bin $(OBJ)/mandelbrot/mandelbrot.txt
+	cp $(OBJ)/mandelbrot/mandelbrot.bin $@
+
+$(MANDELBROT_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/mandelbrot/mandelbrot_hdl.map -s -N -o $(OBJ)/mandelbrot/mandelbrot_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(MANDELBROT_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/mandelbrot/mandelbrot_hdl.axf $(OBJ)/mandelbrot/mandelbrot_hdl.bin $(OBJ)/mandelbrot/mandelbrot_hdl.txt
+	cp $(OBJ)/mandelbrot/mandelbrot_hdl.txt $@
 
 .PHONY: mandelbrot
-mandelbrot: $(MANDELBROT)
+mandelbrot: $(MANDELBROT) $(MANDELBROT_HDL)
 
 $(BUTTONS_OBJECTS): $(OBJ)/buttons/%.o: $(C)/buttons/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(BUTTONS): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/buttons/buttons.map -s -N -o $(OBJ)/buttons/buttons.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/buttons/buttons.axf $(BUTTONS) $(OBJ)/buttons/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/buttons/buttons.map -s -N -o $(OBJ)/buttons/buttons.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/buttons/buttons.axf $(OBJ)/buttons/buttons.bin $(OBJ)/buttons/buttons.txt
+	cp $(OBJ)/buttons/buttons.bin $@
+
+$(BUTTONS_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/buttons/buttons_hdl.map -s -N -o $(OBJ)/buttons/buttons_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(BUTTONS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/buttons/buttons_hdl.axf $(OBJ)/buttons/buttons_hdl.bin $(OBJ)/buttons/buttons_hdl.txt
+	cp $(OBJ)/buttons/buttons_hdl.txt $@
 
 .PHONY: buttons
-buttons: $(BUTTONS)
+buttons: $(BUTTONS) $(BUTTONS_HDL)
 
 $(RGB_OLED_OBJECTS): $(OBJ)/rgb_oled/%.o: $(C)/rgb_oled/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(RGB_OLED): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(RGB_OLED_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/rgb_oled/rgb_oled.map -s -N -o $(OBJ)/rgb_oled/rgb_oled.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(RGB_OLED_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/rgb_oled/rgb_oled.axf $(RGB_OLED) $(OBJ)/rgb_oled/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/rgb_oled/rgb_oled.map -s -N -o $(OBJ)/rgb_oled/rgb_oled.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(RGB_OLED_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/rgb_oled/rgb_oled.axf $(OBJ)/rgb_oled/rgb_oled.bin $(OBJ)/rgb_oled/rgb_oled.txt
+	cp $(OBJ)/rgb_oled/rgb_oled.bin $@
+
+$(RGB_OLED_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(RGB_OLED_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/rgb_oled/rgb_oled_hdl.map -s -N -o $(OBJ)/rgb_oled/rgb_oled_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(RGB_OLED_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/rgb_oled/rgb_oled_hdl.axf $(OBJ)/rgb_oled/rgb_oled_hdl.bin $(OBJ)/rgb_oled/rgb_oled_hdl.txt
+	cp $(OBJ)/rgb_oled/rgb_oled_hdl.txt $@
 
 .PHONY: rgb_oled
-rgb_oled: $(RGB_OLED)
+rgb_oled: $(RGB_OLED) $(RGB_OLED_HDL)
 
 $(SWITCH_LED_OBJECTS): $(OBJ)/switch_led/%.o: $(C)/switch_led/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(SWITCH_LED): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/switch_led/switch_led.map -s -N -o $(OBJ)/switch_led/switch_led.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/switch_led/switch_led.axf $(SWITCH_LED) $(OBJ)/switch_led/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/switch_led/switch_led.map -s -N -o $(OBJ)/switch_led/switch_led.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/switch_led/switch_led.axf $(OBJ)/switch_led/switch_led.bin $(OBJ)/switch_led/switch_led.txt
+	cp $(OBJ)/switch_led/switch_led.bin $@
+
+$(SWITCH_LED_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/switch_led/switch_led_hdl.map -s -N -o $(OBJ)/switch_led/switch_led_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SWITCH_LED_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/switch_led/switch_led_hdl.axf $(OBJ)/switch_led/switch_led_hdl.bin $(OBJ)/switch_led/switch_led_hdl.txt
+	cp $(OBJ)/switch_led/switch_led_hdl.txt $@
 
 .PHONY: switch_led
-switch_led: $(SWITCH_LED)
+switch_led: $(SWITCH_LED) $(SWITCH_LED_HDL)
 
 $(SEVEN_SEGMENTS_OBJECTS): $(OBJ)/seven_segments/%.o: $(C)/seven_segments/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(SEVEN_SEGMENTS): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/seven_segments/seven_segments.map -s -N -o $(OBJ)/seven_segments/seven_segments.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/seven_segments/seven_segments.axf $(SEVEN_SEGMENTS) $(OBJ)/seven_segments/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/seven_segments/seven_segments.map -s -N -o $(OBJ)/seven_segments/seven_segments.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/seven_segments/seven_segments.axf $(OBJ)/seven_segments/seven_segments.bin $(OBJ)/seven_segments/seven_segments.txt
+	cp $(OBJ)/seven_segments/seven_segments.bin $@
+
+$(SEVEN_SEGMENTS_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/seven_segments/seven_segments_hdl.map -s -N -o $(OBJ)/seven_segments/seven_segments_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(SEVEN_SEGMENTS_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/seven_segments/seven_segments_hdl.axf $(OBJ)/seven_segments/seven_segments_hdl.bin $(OBJ)/seven_segments/seven_segments_hdl.txt
+	cp $(OBJ)/seven_segments/seven_segments_hdl.txt $@
 
 .PHONY: seven_segments
-seven_segments: $(SEVEN_SEGMENTS)
+seven_segments: $(SEVEN_SEGMENTS) $(SEVEN_SEGMENTS_HDL)
 
 $(I2C_OBJECTS): $(OBJ)/i2c/%.o: $(C)/i2c/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
 
 $(I2C): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
-	$(LD_MIPS) -Ttext $(ENTRY) -eentry -Map $(OBJ)/i2c/i2c.map -s -N -o $(OBJ)/i2c/i2c.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS)
-	$(CONVERT_BIN) $(OBJ)/i2c/i2c.axf $@ $(OBJ)/i2c/code_bin.txt
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/i2c/i2c.map -s -N -o $(OBJ)/i2c/i2c.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/i2c/i2c.axf $(OBJ)/i2c/i2c.bin $(OBJ)/i2c/i2c.txt
+	cp $(OBJ)/i2c/i2c.bin $@
+
+$(I2C_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/i2c/i2c_hdl.map -s -N -o $(OBJ)/i2c/i2c_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(I2C_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/i2c/i2c_hdl.axf $(OBJ)/i2c/i2c_hdl.bin $(OBJ)/i2c/i2c_hdl.txt
+	cp $(OBJ)/i2c/i2c_hdl.txt $@
 
 .PHONY: i2c
-i2c: $(I2C)
+i2c: $(I2C) $(I2C_HDL)
 
 .PHONY: project
-project: $(PROJECT)
+project: $(PROJECT) $(PROJECT_HDL)
 
 .PHONY: projects
 projects: $(PROJECTS)
 
-$(PLASMA_SOC): $(PLASMA_SOC_SOURCES) $(BOOT_LOADER) | $(BUILD_DIRS)
-	cp $(BOOT_LOADER) $(PLASMA)
+$(PLASMA_SOC): $(PLASMA_SOC_SOURCES) $(BOOT_LOADER_HDL) | $(BUILD_DIRS)
+	cp $(BOOT_LOADER_HDL) $(PLASMA_SOC_BOOTROM)
 	echo "" > $(PLASMA_SOC_FLOW)
 	echo "set outputDir $(OBJ)/plasma" >> $(PLASMA_SOC_FLOW)
 	for file in $(PLASMA_SOC_SOURCES); do echo "read_vhdl $$file" >> $(PLASMA_SOC_FLOW); done
@@ -374,24 +434,21 @@ bitstream: plasma
 vhdl: plasma
 
 .PHONY: simulation
-simulation:
-	xsim tbench --nolog -t $(SIMU)/simu_run.tcl
+simulation: $(PLASMA_SOC_SOURCES) $(PROJECT_HDL) | $(BUILD_DIRS)
+	cp $(PROJECT_HDL) $(PLASMA_SOC_BOOTROM)
+	echo "" > $(PLASMA_SIMULATION_FLOW)
+	for file in $(PLASMA_SOC_SOURCES); do echo "vhdl work ../../$$file" >> $(PLASMA_SIMULATION_FLOW); done
+	for file in $(PLASMA_SIMULATION_SOURCES); do echo "vhdl work ../../$$file" >> $(PLASMA_SIMULATION_FLOW); done
+	xelab --nolog -prj $(PLASMA_SIMULATION_FLOW) -s plasma $(PLASMA_SIMULATION_TOP)
+	xsim plasma --nolog -t $(PLASMA_SIMULATION_TCL)
+	rm $(PLASMA_SIMULATION_FLOW)
+	rm output.txt
+	rm -rf xelab* webtalk* xsim*
 
 .PHONY: simu
 simu: simulation
-
-simulation_modelsim:
-	vsim tbench -c -quiet -do "set NumericStdNoWarnings 1; set StdArithNoWarnings 1; run -all; exit"
-
-.PHONY: simu_modelsim
-simu_modelsim: simulation_modelsim
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIRS)
 	rm -f $(BUILD_BINS)
-
-.PHONY: distclean
-distclean: clean
-	rm -rf $(OBJ)
-	rm -rf $(BIN)

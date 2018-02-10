@@ -1317,7 +1317,7 @@ begin  --architecture
 		       	oledterminal_pinout when oled_mux(3 downto 0) = "0011" else
 		       	olednibblemap_pinout when oled_mux(3 downto 0) = "0100" else
 		       	oledsigplot_pinout when oled_mux(3 downto 0) = "0101" else
-		       	unaffected;
+		       	(others => 'Z');
 	end generate;
 
 	rgb_oled_gen_disabled: if eRGBOLED = '0' generate
