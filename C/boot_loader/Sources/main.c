@@ -24,7 +24,7 @@
 
 extern  int kbhit(void);
 extern  int getch(void);
-
+extern  int putchar(int value);
 typedef void (*FuncPtr)(void);
 
 extern void ProgramExec();
