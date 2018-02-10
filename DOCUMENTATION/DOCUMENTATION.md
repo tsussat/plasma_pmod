@@ -146,7 +146,7 @@ Les différents fichiers VHDL qui décrivent la gestion des afficheurs sept segm
   <img src="SRC/i2cbloc.png">
 </p>
 
-### Adresses associées au module
+### Adresses des registres associés au module
 
 - `0x40000300`: adresse du registre qui contient l'adresse de l'esclave ciblé dans une communication *I2C*.
 - `0x40000304`: adresse du registre de status du module *I2C*.
