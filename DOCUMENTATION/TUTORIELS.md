@@ -137,6 +137,7 @@ Le projet `buttons` prend en charge le contrôleur de boutons poussoirs (situés
 * Compilation: `make projet CONFIG_PROJECT=buttons`
 * Chargement par UART: `make send CONFIG_PROJECT=buttons`
 * Code: `C/buttons/Sources/main.c`
+* [Documentation](DOCUMENTATION.md#boutons)
 
 Le code `C/buttons/Sources/main.c` va dans un premier temps vérifier si un changement dans l'état des boutons a été détecté (registre `BUTTONS_CHANGE` différent de 0) et réitérer dans la boucle principale si ce n'est pas le cas :
 > if (MemoryRead(BUTTONS_CHANGE) == 0)  
@@ -151,6 +152,7 @@ Le projet `switch_led` prend en charge le contrôleur dédié aux switchs et aux
 * Compilation: `make projet CONFIG_PROJECT=switch_led`
 * Chargement par UART: `make send CONFIG_PROJECT=switch_led`
 * Code: `C/switch_led/Sources/main.c`
+* [Documentation](DOCUMENTATION.md#switchs-&-leds)
 
 Il s'agit dans un premier temps de réinitialiser le contrôleur par une écriture dans le registre `CTRL_SL_RST`. Par la suite, on va lire les valeurs des switchs par une lecture dans le registre `CTRL_SL_RW` et on va écrire cette valeur (pour les LEDs associées) complétée par son décalage de 16 bits vers la gauche (pour les composantes de chaque LED RGB). On affiche de plus la valeur.
 
@@ -163,6 +165,7 @@ Le projet `seven_segments` prend en charge le contrôleur dédié aux afficheurs
 * Compilation: `make projet CONFIG_PROJECT=seven_segments`
 * Chargement par UART: `make send CONFIG_PROJECT=seven_segments`
 * Code: `C/seven_segments/Sources/main.c`
+* [Documentation](DOCUMENTATION.md#afficheur-sept-segments)
 
 On va utiliser à la fois le contrôleur de switchs présenté précédemment et le contrôleur dédié aux afficheurs sept segments. On initialise les contrôleurs avec des écritures dans les registres dédiés :
 > MemoryWrite(SEVEN_SEGMENT_RST, 1);  
@@ -182,6 +185,7 @@ Le projet `i2c` prend en charge les contrôleurs i2c dédiés au capteur de temp
 * Compilation: `make projet CONFIG_PROJECT=i2c`
 * Chargement par UART: `make send CONFIG_PROJECT=i2c`
 * Code: `C/i2c/Sources/main.c`, `C/i2c/Sources/i2c.c`
+* [Documentation](DOCUMENTATION.md#module-de-gestion-de-li2c)
 
 Les fonctions spécifiques à la prise en charge du contrôleur I2C sur regroupées dans le fichier `i2c.c`. Ces fonctions sont prêtes à être utilisées pour la prise en charge des composants présentés mais elles peuvent être utilisées avec tout contrôleur I2C.
 
@@ -262,7 +266,75 @@ Pour sélectionner l'adresse du registre :
 Et pour lire un seul octet :
 > receive_data((unsigned int *) &buf[i], 1);
 
-On peut alors reconstruire les données (LSB en premier) sur 16 bits :
+On peut alors reconstruire les données (LSB lu en premier) sur 16 bits :
 > x = (short) (buf[1] << 8) + buf[0];
 
 ### RGB OLED
+
+Le PMOD OLED RGB permet l'affichage de caractères ASCII sous 8 lignes X 16 colonnes. Il permet aussi de réaliser un affichage Bitmap sous 96X64 avec 16 bits/pixel. Un module d'affichage de jusqu'à 4 courbes a également été instancié (non testé encore).
+
+L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bornat, détaillé à l'adresse suivante: http://bornat.vvv.enseirb.fr/wiki/doku.php?id=en202:pmodoledrgb.
+
+<p align="center">
+  <img src="SRC/OLEDrgb.png" alt="Oled-RGB" height="250" width="250">
+</p>
+
+Celui-ci doit être relié à la carte par le port **JB** en bas à droite de la carte.
+
+* Compilation: `make projet CONFIG_PROJECT=rgb_oled`
+* Chargement par UART: `make send CONFIG_PROJECT=rgb_oled`
+* Code: `C/i2c/Sources/main.c`, `C/i2c/Sources/rgb_oled.c`
+
+On trouve des fonctions d'exemple pour chacune des fonctionnalités prises en charge :
+* **Charmap** : `rgb_oled_charmap`
+* **Bitmap** : `rgb_oled_bitmap`
+* **Terminal** : `rgb_oled_terminal`
+
+Chaque module possède une adresse d'activation sur un bit (*oledXXXXXX_valid*) qui passe à '1' au moment d'une lecture ou d'une écriture à l'adresse correspondante au module.
+
+#### Module Charmap
+
+Le module **Charmap** permet l'affichage sur l'écran Oled-RGB d'un caractère ASCII à une position donnée (ligne et colone).
+Ce module du PMOD Oled-RGB est adressable aux adresses suivantes:
+  * READ/WRITE: OLEDCHARMAP_RW    --> 0x400000A8
+  * RESET:      OLEDCHARMAP_RST   --> 0x400000A0
+
+Avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Charmap*. Ainsi on lit à l'adresse définit par le macro *OLEDCHARMAP_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
+Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDCHARMAP_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
+L'allure de la trame à envoyer est la suivante:
+  * la valeur hexadecimal du caractère sur les bits 7 à 0.
+  * la valeur hexadecimal de la ligne sur les bits 10 à 8.
+  * la valeur hexadecimal de la colonne sur les bits 19 à 16.
+
+Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledcharmap/Sources/*.
+Pour faciliter l'écriture de la trame à envoyé, une fonction printCar() a été mise en place, prenant en paramètre le caractère, la ligne et la colonne: *void printCar(char row, char col, char car)*.
+
+#### Module Terminal
+
+Le module **Terminal** permet l'affichage sur l'écran Oled-RGB de caractères ASCII en prenant en charge la position. Il est donc plus adapté que le module *Charmap* pour écrire un buffer contenant plusieurs caractères.
+Ce module du PMOD Oled-RGB utilise le précedent module *Charmap* et est adressable aux adresses suivantes:
+  * READ/WRITE: OLEDTERMINAL_RW   --> 0x400000A4
+  * RESET:      OLEDTERMINAL_RST  --> 0x400000AC
+
+De la même manière que pour le module *Charmap*, avant de pouvoir afficher un caractère, il vaut attendre que le module soit prêt à le recevoir. Cela ce traduit par l'activation du bit *Ready* de poids faible en sortie du module *Terminal*. Ainsi on lit à l'adresse définit par le macro *OLEDTERMINAL_RW* ce bit grâce à la fonction *MemoryRead()* et ce jusqu'à qu'il vaille '1'.
+Ensuite une fois le module prêt, pour afficher un caractère, il suffit d'écrire à la bonne adresse (*OLEDTERMINAL_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
+L'allure de la trame à envoyer est la suivante:
+  * la valeur hexadecimal du caractère sur les bits 7 à 0.
+  * le bit 24 à '1' pour effacer entièrement l'écran en noir (couleur par défaut): *screen_clear*.
+
+Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledterminal/Sources/*.
+
+#### Module Bitmap
+
+Le module **Bitmap** du PMOD Oled-RGB est adressable aux adresses suivantes:
+  * READ/WRITE: OLEDBITMAP_RW     --> 0x400000B0
+  * RESET:      OLEDBITMAP_RST    --> 0x400000B8
+
+Pour ce module, il n'est pas nécessaire d'attendre que l'écran soit prêt avant de lui envoyer la trame. Pour colorier un pixel, il suffit d'écrire directement à la bonne adresse (*OLEDBITMAP_RW*) une trame de 32 bits contenant l'ensemble des informations. On utilise pour cela la fonction *MemoryWrite()*.
+L'allure de la trame à envoyer est la suivante:
+  * la valeur hexadecimal de la colonne sur les bits 6 à 0.
+  * la valeur hexadecimal de la ligne sur les bits 13 à 8.
+  * la valeur hexadecimal de la couleur du pixel sur les bits 16 à 31.
+On peut cependant raccourcir à 8 bits la trame de la valeur de la couleur du pixel en modifiant la valeur de BPP dans la description VHDL (*plasma.vhd*). Cette valeur correspond à la profondeur colorimétrique et elle est définit par défaut à 16 bpp ce qui équivaut au mode *Highcolor*.
+
+Un exemple d'utilisation pour ce module est donné dans le fichier *main.c* du répertoire *C/rgb_oledbitmap/Sources/*.
