@@ -48,7 +48,7 @@ int main(int argc, char ** argv)
 
 
 
-int main(int argc, char ** argv)
+/*int main(int argc, char ** argv)
 {
 	int a = 40;
 	int b = 24;
@@ -84,4 +84,4 @@ int main(int argc, char ** argv)
 		my_printf("pgcd = ", b);
 	}
 
-}
+}*/
