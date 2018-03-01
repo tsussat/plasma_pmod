@@ -22,9 +22,19 @@
 #define UP_BUTTON     0x00000002
 #define CENTER_BUTTON 0x00000001
 
-#define OLED_RW       0x400000A4
-#define OLED_RST      0x400000A0
+//#define OLED_RW       0x400000A4
+//#define OLED_RST      0x400000A0
 
+void printPixel(char row, char col, int color)
+{
+	int buff = 0x00000000;
+
+	buff = color;
+	buff = (buff << 8) | row;
+	buff = (buff << 8) | col;
+
+	MemoryWrite(OLED_BITMAP_RW, buff);
+}
 
 int Convergence(int x_C, int y_C, int Imax) {
    
@@ -90,7 +100,8 @@ void generate_mandelbrot(int H, int W, int Imax, int FS, int x_A, int y_A, int x
 
 	int buff, pixel, i;
 
-	coproc_reset(COPROC_1_RST);
+	//coproc_reset(COPROC_1_RST);
+	
 	int sw = MemoryRead(CTRL_SL_RW);
 
 for(int py = 0; py < H; py++)
@@ -100,34 +111,38 @@ for(int py = 0; py < H; py++)
 	for(int px = 0; px < W; px ++){
 
 		x_C = x_A + dx*px;
+		i = Convergence(x_C, y_C, Imax);
 		
-		if((sw&(1<<15)) != 0)
+/*		if((sw&(1<<15)) != 0)
 		{
 			i = Convergence(x_C, y_C, Imax);
 		}
 		else if((sw&(1<<14)) != 0)
 		{
-			i = Convergence_opt(x_C, y_C, Imax);
+			//i = Convergence_opt(x_C, y_C, Imax);
+			i = Convergence(x_C, y_C, Imax);
 		}
 		else
 		{
-			coproc_write(COPROC_1_RW, x_C);
-			coproc_write(COPROC_1_RW, y_C);	
-			int clk = r_timer();
+			//coproc_write(COPROC_1_RW, x_C);
+			//coproc_write(COPROC_1_RW, y_C);	
+			//int clk = r_timer();
 
-			while(r_timer() - clk < 300)
-			{
-			}
+			//while(r_timer() - clk < 300)
+			//{
+			//}
 
-			i = coproc_read(COPROC_1_RW);
+			//i = coproc_read(COPROC_1_RW);
+			i = Convergence(x_C, y_C, Imax);
 		}
-
+*/
 		pixel = i;
 
-		buff = px;
-		buff = (buff << 6) | py;
-		buff = (buff << 16) | pixel;
-		MemoryWrite(OLED_RW, buff);		
+		//buff = px;
+		//buff = (buff << 6) | py;
+		//buff = (buff << 16) | pixel;
+		//MemoryWrite(OLED_RW, buff);		
+		printPixel(py,px,pixel);
 	}
 }
 
@@ -149,7 +164,10 @@ int main(int argc, char **argv) {
 	int W = 96;
 	int Imax = 255;
 
-	MemoryWrite(OLED_RST, 1); // reset the oled_rgb
+	//MemoryWrite(OLED_RST, 1); // reset the oled_rgb
+	MemoryWrite(OLED_MUX, OLED_MUX_BITMAP);
+	MemoryWrite(OLED_BITMAP_RST, 1); // Reset the oled_rgb PMOD
+
 
 	generate_mandelbrot(H, W, Imax, 255, x_A, y_A, x_B, y_B);
 	
