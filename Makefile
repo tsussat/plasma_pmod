@@ -77,6 +77,15 @@ BUILD_DIRS += $(OBJ)/mandelbrot
 BUILD_BINS += $(BIN)/mandelbrot.bin
 PROJECTS += $(MANDELBROT)
 
+PGCD = $(BIN)/pgcd.bin
+PGCD_HDL = $(BIN)/pgcd.txt
+PGCD_FILES = main.c
+PGCD_SOURCES = $(addprefix $(C)/pgcd/Sources/,$(PGCD_FILES))
+PGCD_OBJECTS = $(addprefix $(OBJ)/pgcd/,$(PGCD_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/pgcd
+BUILD_BINS += $(BIN)/pgcd.bin
+PROJECTS += $(PGCD)
+
 BUTTONS = $(BIN)/buttons.bin
 BUTTONS_HDL = $(BIN)/buttons.txt
 BUTTONS_FILES = main.c
@@ -181,6 +190,9 @@ PROJECT_HDL = $(HELLO_HDL)
 else ifeq ($(CONFIG_PROJECT),mandelbrot)
 PROJECT = $(MANDELBROT)
 PROJECT_HDL = $(MANDELBROT_HDL)
+else ifeq ($(CONFIG_PROJECT),pgcd)
+PROJECT = $(PGCD)
+PROJECT_HDL = $(PGCD_HDL)
 else ifeq ($(CONFIG_PROJECT),buttons)
 PROJECT = $(BUTTONS)
 PROJECT_HDL = $(BUTTONS_HDL)
@@ -305,6 +317,22 @@ $(HELLO_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS) $(CONVERT
 
 .PHONY: hello
 hello: $(HELLO) $(HELLO_HDL)
+
+$(PGCD_OBJECTS): $(OBJ)/pgcd/%.o: $(C)/pgcd/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(PGCD): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PGCD_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/pgcd/pgcd.map -s -N -o $(OBJ)/pgcd/pgcd.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PGCD_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/pgcd/pgcd.axf $(OBJ)/pgcd/pgcd.bin $(OBJ)/pgcd/pgcd.txt
+	cp $(OBJ)/pgcd/pgcd.bin $@
+
+$(PGCD_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PGCD_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/pgcd/pgcd_hdl.map -s -N -o $(OBJ)/pgcd/pgcd_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PGCD_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/pgcd/pgcd_hdl.axf $(OBJ)/pgcd/pgcd_hdl.bin $(OBJ)/pgcd/pgcd_hdl.txt
+	cp $(OBJ)/pgcd/pgcd_hdl.txt $@
+
+.PHONY: pgcd
+pgcd: $(pgcd) $(PGCD_HDL)
 
 $(MANDELBROT_OBJECTS): $(OBJ)/mandelbrot/%.o: $(C)/mandelbrot/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
