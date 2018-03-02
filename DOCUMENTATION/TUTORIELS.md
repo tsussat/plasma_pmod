@@ -134,35 +134,35 @@ Différents projet fournis et mettent en œuvre la prise en charge des différen
 
 Le projet `buttons` prend en charge le contrôleur de boutons poussoirs (situés en haut à droite des afficheurs sept-segments).
 
-* Compilation: `make projet CONFIG_PROJECT=buttons`
+* Compilation: `make project CONFIG_PROJECT=buttons`
 * Chargement par UART: `make send CONFIG_PROJECT=buttons`
 * Code: `C/buttons/Sources/main.c`
 * [Documentation](DOCUMENTATION.md#boutons)
 
-Le code `C/buttons/Sources/main.c` va dans un premier temps vérifier si un changement dans l'état des boutons a été détecté (registre `BUTTONS_CHANGE` différent de 0) et réitérer dans la boucle principale si ce n'est pas le cas :
+Le code `C/buttons/Sources/main.c` va dans un premier temps vérifier si un changement dans l'état des boutons a été détecté (contenu de l'adresse `BUTTONS_CHANGE` différent de 0) et réitérer dans la boucle principale si ce n'est pas le cas :
 > if (MemoryRead(BUTTONS_CHANGE) == 0)  
 > 	continue
 
-Par la suite, on peut récupérer l'état des boutons dans le registre `BUTTONS_VALUES` (le changement instantané d'état est donné par le registre `BUTTONS_CHANGE`). La valeur ainsi récupérée est alors affichée sur le port série.
+Par la suite, on peut récupérer l'état des boutons à l'adresse `BUTTONS_VALUES` (le changement instantané d'état est donné par la valeur contenue à l'adresse `BUTTONS_CHANGE`). La valeur ainsi récupérée est alors affichée sur le port série.
 
 ### Switch/LEDs
 
-Le projet `switch_led` prend en charge le contrôleur dédié aux switchs et aux LEDs (sités en bas de la carte).
+Le projet `switch_led` prend en charge le contrôleur dédié aux switchs et aux LEDs (situés en bas de la carte).
 
-* Compilation: `make projet CONFIG_PROJECT=switch_led`
+* Compilation: `make project CONFIG_PROJECT=switch_led`
 * Chargement par UART: `make send CONFIG_PROJECT=switch_led`
 * Code: `C/switch_led/Sources/main.c`
 * [Documentation](DOCUMENTATION.md#switchs-&-leds)
 
-Il s'agit dans un premier temps de réinitialiser le contrôleur par une écriture dans le registre `CTRL_SL_RST`. Par la suite, on va lire les valeurs des switchs par une lecture dans le registre `CTRL_SL_RW` et on va écrire cette valeur (pour les LEDs associées) complétée par son décalage de 16 bits vers la gauche (pour les composantes de chaque LED RGB). On affiche de plus la valeur.
+Il s'agit dans un premier temps de réinitialiser le contrôleur par une écriture à l'adresse `CTRL_SL_RST`. Par la suite, on lit les valeurs des switchs par une lecture à l'adresse `CTRL_SL_RW` et on va écrire cette valeur (pour les LEDs associées) complétée par son décalage de 16 bits vers la gauche (pour les composantes de chaque LED RGB). On affiche de plus la valeur.
 
-La fonction `sleep` permet de délayer l'exécution du nombre de millisecondes précisé.
+La fonction `sleep` permet de temporiser l'exécution d'une durée égale au nombre de millisecondes précisé en argument.
 
 ### Seven Segments
 
 Le projet `seven_segments` prend en charge le contrôleur dédié aux afficheurs 7 segments.
 
-* Compilation: `make projet CONFIG_PROJECT=seven_segments`
+* Compilation: `make project CONFIG_PROJECT=seven_segments`
 * Chargement par UART: `make send CONFIG_PROJECT=seven_segments`
 * Code: `C/seven_segments/Sources/main.c`
 * [Documentation](DOCUMENTATION.md#afficheur-sept-segments)
@@ -182,7 +182,7 @@ La fonction `sleep` permet de délayer l'exécution du nombre de millisecondes p
 
 Le projet `i2c` prend en charge les contrôleurs i2c dédiés au capteur de température externe et aux PMODs I2C connectes sur le port **JA**.
 
-* Compilation: `make projet CONFIG_PROJECT=i2c`
+* Compilation: `make project CONFIG_PROJECT=i2c`
 * Chargement par UART: `make send CONFIG_PROJECT=i2c`
 * Code: `C/i2c/Sources/main.c`, `C/i2c/Sources/i2c.c`
 * [Documentation](DOCUMENTATION.md#module-de-gestion-de-li2c)
@@ -281,7 +281,7 @@ L'ajout des divers modules de ce PMOD au projet repose sur le travail de Mr. Bor
 
 Celui-ci doit être relié à la carte par le port **JB** en bas à droite de la carte.
 
-* Compilation: `make projet CONFIG_PROJECT=rgb_oled`
+* Compilation: `make project CONFIG_PROJECT=rgb_oled`
 * Chargement par UART: `make send CONFIG_PROJECT=rgb_oled`
 * Code: `C/i2c/Sources/main.c`, `C/i2c/Sources/rgb_oled.c`
 
