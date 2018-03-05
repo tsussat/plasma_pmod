@@ -4,7 +4,7 @@
 
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
-/*
+
 int main(int argc, char ** argv)
 {
 	int a = 40;
@@ -22,8 +22,8 @@ int main(int argc, char ** argv)
 	}
 	pgcd = b;
 }
-*/
-int main(int argc, char ** argv)
+
+/*int main(int argc, char ** argv)
 {
 	int a = 40;
 	int b = 24;
@@ -44,11 +44,10 @@ int main(int argc, char ** argv)
 	}
 
 	my_printf("pgcd = ", b);
-}
+}*/
 
-
-
-/*int main(int argc, char ** argv)
+/*
+int main(int argc, char ** argv)
 {
 	int a = 40;
 	int b = 24;
@@ -65,7 +64,7 @@ int main(int argc, char ** argv)
 		while (MemoryRead(BUTTONS_CHANGE) == 0) {
 			sw = MemoryRead(CTRL_SL_RW);
 			a = (sw >> 8); // a = MSBs
-			b = sw & 0x000F; // b = LSBs
+			b = sw & 0x00FF; // b = LSBs
 		}
 
 		my_printf("a =", a);
