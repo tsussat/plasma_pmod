@@ -467,8 +467,8 @@ simulation: $(PLASMA_SOC_SOURCES) $(PROJECT_HDL) | $(BUILD_DIRS)
 	echo "" > $(PLASMA_SIMULATION_FLOW)
 	for file in $(PLASMA_SOC_SOURCES); do echo "vhdl work ../../$$file" >> $(PLASMA_SIMULATION_FLOW); done
 	for file in $(PLASMA_SIMULATION_SOURCES); do echo "vhdl work ../../$$file" >> $(PLASMA_SIMULATION_FLOW); done
-	xelab --nolog -prj $(PLASMA_SIMULATION_FLOW) -s plasma $(PLASMA_SIMULATION_TOP)
-	xsim plasma --nolog -t $(PLASMA_SIMULATION_TCL)
+	xelab --nolog --debug wave -prj $(PLASMA_SIMULATION_FLOW) -s plasma $(PLASMA_SIMULATION_TOP)
+	xsim plasma --nolog --gui -t $(PLASMA_SIMULATION_TCL)
 	rm $(PLASMA_SIMULATION_FLOW)
 	rm output.txt
 	rm -rf xelab* webtalk* xsim*
