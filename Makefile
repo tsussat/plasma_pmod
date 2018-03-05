@@ -68,6 +68,15 @@ BUILD_DIRS += $(OBJ)/hello
 BUILD_BINS += $(BIN)/hello.bin
 PROJECTS += $(HELLO)
 
+PROJET_E2 = $(BIN)/projet_e2.bin
+PROJET_E2_HDL = $(BIN)/projet_e2.txt
+PROJET_E2_FILES = main.c
+PROJET_E2_SOURCES = $(addprefix $(C)/projet_e2/Sources/,$(PROJET_E2_FILES))
+PROJET_E2_OBJECTS = $(addprefix $(OBJ)/projet_e2/,$(PROJET_E2_FILES:.c=.o))
+BUILD_DIRS += $(OBJ)/projet_e2
+BUILD_BINS += $(BIN)/projet_e2.bin
+PROJECTS += $(PROJET_E2)
+
 MANDELBROT = $(BIN)/mandelbrot.bin
 MANDELBROT_HDL = $(BIN)/mandelbrot.txt
 MANDELBROT_FILES = main.c
@@ -187,6 +196,9 @@ CONFIG_I2C ?= yes
 ifeq ($(CONFIG_PROJECT),hello)
 PROJECT = $(HELLO)
 PROJECT_HDL = $(HELLO_HDL)
+else ifeq ($(CONFIG_PROJECT),projet_e2)
+PROJECT = $(PROJET_E2)
+PROJECT_HDL = $(PROJET_E2_HDL)
 else ifeq ($(CONFIG_PROJECT),mandelbrot)
 PROJECT = $(MANDELBROT)
 PROJECT_HDL = $(MANDELBROT_HDL)
@@ -316,7 +328,23 @@ $(HELLO_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(HELLO_OBJECTS) $(CONVERT
 	cp $(OBJ)/hello/hello_hdl.txt $@
 
 .PHONY: hello
-hello: $(HELLO) $(HELLO_HDL)
+hello: $(PROJET_E2) $(PROJET_E2_HDL)
+
+$(PROJET_E2_OBJECTS): $(OBJ)/projet_e2/%.o: $(C)/projet_e2/Sources/%.c | $(BUILD_DIRS)
+	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
+
+$(PROJET_E2): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PROJET_E2_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_LOAD) -eentry -Map $(OBJ)/projet_e2/projet_e2.map -s -N -o $(OBJ)/projet_e2/projet_e2.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PROJET_E2_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/projet_e2/projet_e2.axf $(OBJ)/projet_e2/projet_e2.bin $(OBJ)/projet_e2/projet_e2.txt
+	cp $(OBJ)/projet_e2/projet_e2.bin $@
+
+$(PROJET_E2_HDL): $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PROJET_E2_OBJECTS) $(CONVERT_BIN) | $(BUILD_DIRS)
+	$(LD_MIPS) -Ttext $(ENTRY_HDL) -eentry -Map $(OBJ)/projet_e2/projet_e2.map -s -N -o $(OBJ)/projet_e2/projet_e2_hdl.axf $(SHARED_OBJECTS_ASM) $(SHARED_OBJECTS) $(PROJET_E2_OBJECTS)
+	$(CONVERT_BIN) $(OBJ)/projet_e2/projet_e2_hdl.axf $(OBJ)/projet_e2/projet_e2_hdl.bin $(OBJ)/projet_e2/projet_e2_hdl.txt
+	cp $(OBJ)/projet_e2/projet_e2_hdl.txt $@
+
+.PHONY: projet_e2
+projet_e2: $(PROJET_E2) $(PROJET_E2_HDL)
 
 $(PGCD_OBJECTS): $(OBJ)/pgcd/%.o: $(C)/pgcd/Sources/%.c | $(BUILD_DIRS)
 	$(CC_MIPS) $(CFLAGS_MIPS) -o $@ $<
