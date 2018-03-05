@@ -14,6 +14,7 @@ void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes
 }
 
 int main(int argc, char ** argv) {
+
 	int sw, value;
 
 	MemoryWrite(CTRL_SL_RST, 1); // reset the sw/led controler
@@ -22,8 +23,8 @@ int main(int argc, char ** argv) {
 		sw = MemoryRead(CTRL_SL_RW); // read the state of the switches
 		value =  (sw<<16) | sw ; // MSByte drives the 2 RBG Led (6 bit), LSByte drives the led
 		my_printf("value = ", value); // display the value on the UART
-		MemoryWrite(CTRL_SL_RW, value);
+		MemoryWrite(CTRL_SL_RW, value); // drive the LEDs with value
 
-		sleep(100);
+		sleep(100); // wait 100 ms
 	}
 }

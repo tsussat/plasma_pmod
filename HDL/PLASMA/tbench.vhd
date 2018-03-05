@@ -243,4 +243,6 @@ BEGIN  --architecture
 	    gpioA_in	    => gpioA_in
 	    );
 
+	sw <= x"2818";
+
 END;  --architecture logic

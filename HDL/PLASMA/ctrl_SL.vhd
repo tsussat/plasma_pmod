@@ -40,18 +40,18 @@ begin
 	
 	OUTPUT_1 <= "0000000000000000"&SW;
 
-	process (clock, reset)
-	begin
-		IF ( reset = '1' ) THEN
-			input_coproc 	<= (others => '0');
-		ELSIF clock'event AND clock = '1' THEN
-			IF INPUT_1_valid = '1' THEN
-				input_coproc 	<= INPUT_1;
-			ELSE
-				input_coproc 	<= input_coproc;
-			END IF;
-		END IF;
-	end process;
+   process (clock)
+      begin
+      IF clock'event AND clock = '1' THEN
+         IF ( reset = '1' ) THEN
+            input_coproc    <= (others => '1');
+         ELSIF INPUT_1_valid = '1' THEN
+            input_coproc 	<= INPUT_1;--x"ABCDEF12";
+         ELSE
+            input_coproc 	<= input_coproc;--x"01234567";--input_coproc;
+         END IF;
+      END IF;
+   end process;
 
 	LED <= 	input_coproc(15 downto 0);
 
