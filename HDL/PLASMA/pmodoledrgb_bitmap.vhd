@@ -50,13 +50,13 @@ entity PmodOLEDrgb_bitmap is
              LEFT_SIDE   : boolean := False);           -- True if the Pmod is on the left side of the board
     Port (clk          : in  STD_LOGIC;
           reset        : in  STD_LOGIC;
-
+          
           pix_write    : in  STD_LOGIC;
           pix_col      : in  STD_LOGIC_VECTOR(    6 downto 0);
           pix_row      : in  STD_LOGIC_VECTOR(    5 downto 0);
           pix_data_in  : in  STD_LOGIC_VECTOR(BPP-1 downto 0);
           pix_data_out : out STD_LOGIC_VECTOR(BPP-1 downto 0);
-
+          
           PMOD_CS      : out STD_LOGIC;
           PMOD_MOSI    : out STD_LOGIC;
           PMOD_SCK     : out STD_LOGIC;
@@ -76,10 +76,10 @@ architecture Behavioral of PmodOLEDrgb_bitmap is
    constant delay_after_set_RES_2   : integer := CLK_FREQ_HZ /333;      -- 15ms (actually 15.151ms) officially 3ms
    constant delay_after_set_VCCEN   : integer := CLK_FREQ_HZ /40;       -- 25ms
    constant delay_for_disp_ok       : integer := CLK_FREQ_HZ /10;       -- 100ms
-
+   
    -- this is just to get proper integer dimension...
    constant max_wait : integer := CLK_FREQ_HZ /10;
-
+   
    signal wait_cnt                  : integer range 0 to max_wait-1;    -- the counter for waiting states
 
 
@@ -116,7 +116,7 @@ architecture Behavioral of PmodOLEDrgb_bitmap is
                        w_phase_len,
                        setup_disp_clk,    -- 0xB3 0xF0
                        w_set_disp_clk,
-                       --pre_charge_A,      -- (red) 0x8A, 0x64
+                       --pre_charge_A,      -- (red) 0x8A, 0x64 
                        --w_pcA,
                        --pre_charge_B,      -- (green) 0x8B, 0x78
                        --w_pcB,
@@ -176,12 +176,13 @@ architecture Behavioral of PmodOLEDrgb_bitmap is
    signal buff_next_pix : std_logic_vector(BPP-1 downto 0); -- the next pixel to send
    signal next_16bpix   : std_logic_vector(15 downto 0); -- the next pixel to send coded 16bpp
    signal write_dly     : std_logic;                     -- a cycle delay for write to wait for user_addr to be ready
-
-
+   
+   
+   signal toto          : std_logic_vector(BPP-1 downto 0); -- pouet pouet
 
 begin
 
-
+   
    -- affecting the outputs...
    process(clk)
    begin
@@ -191,38 +192,38 @@ begin
          elsif OLED_FSM = waking then
             PMOD_DC <= '0';
          end if;
-
+         
          if OLED_FSM = waking or OLED_FSM = w_set_RES_2 then
             PMOD_RES <= '1';
          elsif OLED_FSM = clear_RES then
             PMOD_RES <= '0';
          end if;
-
+         
          if reset = '1' then
             PMOD_EN <= '0';
          elsif OLED_FSM = set_EN then
             PMOD_EN <= '1';
          end if;
-
+         
          if OLED_FSM = set_VCCEN then
             PMOD_VCCEN <= '1';
          elsif OLED_FSM = waking then
             PMOD_VCCEN <= '0';
          end if;
-
+         
          if reset = '1' then
             PMOD_CS <= '1';
          elsif OLED_FSM = w_set_RES_2 then
             -- we assert the SPI CS on the state before sending the first instruction
             PMOD_CS <= '0';
-         end if;
+         end if;         
       end if;
    end process;
-
-
-
-
-
+   
+   
+   
+   
+   
    -- the main FSM of the module
    process(clk)
    begin
@@ -337,7 +338,7 @@ begin
                | disp_on
             --   | set_dispsize1
             --   | set_dispsize2
-            --   | set_dispsize3
+            --   | set_dispsize3    
                                   => wait_cnt <= SPI_halfper;
             when others           => -- in these states, we will change as soon as wait_cnt is 0
                                      -- or we are sending data through SPI, so we reload SPI_halfper just in case.
@@ -423,7 +424,7 @@ begin
                                   => spi_rem_bits <= 15;
             when send_disp_off
                | disp_on          => spi_rem_bits <= 7;
-            when others           =>
+            when others           => 
                if wait_cnt = 0 and spi_sck = '1' then
                   if spi_rem_bits > 0 then
                      spi_rem_bits <= spi_rem_bits - 1;
@@ -461,7 +462,7 @@ begin
             when send_disp_off    => spi_shift_reg <= x"AE00";
             when disp_on          => spi_shift_reg <= x"AF00";
             when w_disp_ok        => spi_shift_reg <= buff_next_pix;
-            when others           =>
+            when others           => 
                if wait_cnt = 0 and spi_sck = '1' and spi_active then
                   if spi_rem_bits > 0 then
                      spi_shift_reg(15 downto 1) <= spi_shift_reg(14 downto 0);
@@ -502,9 +503,10 @@ begin
       if rising_edge(clk) then
          write_dly     <= pix_write;
          user_addr     <= (pix_col(6) and not pix_col(5)) & pix_col(5 downto 0) & pix_row;
+         toto          <= pix_data_in;
          pix_data_out  <= bitmap(to_integer(unsigned(user_addr)));
          if write_dly = '1' then
-            bitmap(to_integer(unsigned(user_addr))) <= pix_data_in;
+            bitmap(to_integer(unsigned(user_addr))) <= toto;
          end if;
          buff_next_pix <= bitmap(read_addr);
       end if;
@@ -606,3 +608,4 @@ begin
 
 
 end Behavioral;
+

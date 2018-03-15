@@ -44,7 +44,7 @@ begin
       begin
       IF clock'event AND clock = '1' THEN
          IF ( reset = '1' ) THEN
-            input_coproc    <= (others => '1');
+            input_coproc    <= x"0000FFFF";
          ELSIF INPUT_1_valid = '1' THEN
             input_coproc 	<= INPUT_1;--x"ABCDEF12";
          ELSE
