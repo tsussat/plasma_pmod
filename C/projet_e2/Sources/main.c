@@ -7,12 +7,15 @@
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
+#define MAX_ROW 63
+#define MAX_COL 95
+
 int main(int argc, char ** argv)
 {
 
   int sw, value, color;
-  char col = 47;
-  char row = 32;
+  char col = 0;
+  char row = 0;
 
   MemoryWrite(OLED_MUX, OLED_MUX_BITMAP);
   MemoryWrite(OLED_BITMAP_RST, 1); // Reset the oled_rgb PMOD
@@ -35,7 +38,18 @@ int main(int argc, char ** argv)
       color+=0xF800;
     }
     printPixel(row,col,color);
-
-    //sleep(100); // wait 100 ms
+    if (col<MAX_COL){
+      col++;
+    }
+    else{
+      col=0;
+      if (row<MAX_ROW){
+        row++;
+      }
+      else{
+        row=0;
+      }
+    }
+    sleep(100); // wait 100 ms
   }
 }
