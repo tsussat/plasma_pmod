@@ -31,7 +31,30 @@ int main(int argc, char ** argv)
       //central button
       write = !(write);
     }
-
+    if (val_button & 0x00000002){
+      //up button
+      if (row > 0) {
+        row--;
+      }
+    }
+    if (val_button & 0x00000004){
+      //down button
+      if (row < MAX_ROW) {
+        row++;
+      }
+    }
+    if (val_button & 0x00000008){
+      //left button
+      if (col > 0) {
+        col--;
+      }
+    }
+    if (val_button & 0x00000010){
+      //down button
+      if (col < MAX_COL) {
+        col++;
+      }
+    }
 
 
     //LED
@@ -55,6 +78,13 @@ int main(int argc, char ** argv)
     if (write == 1){
       printPixel(row,col,color);
     }
+
+
+    //RESET
+    if(sw & 0x00008000){
+      clearScreen();  
+    }
+
     sleep(100); // wait 100 ms
   }
 }
