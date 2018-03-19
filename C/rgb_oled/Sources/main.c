@@ -28,48 +28,48 @@ void rgb_oled_bitmap(void)
 	printPixel(25, 34, 0xF800);
 	printPixel(25, 35, 0xF800);
 	printPixel(25, 36, 0xF800);
-	
+
 	printPixel(31, 32, 0xF800);
 	printPixel(31, 33, 0xF800);
 	printPixel(31, 34, 0xF800);
 	printPixel(31, 35, 0xF800);
 	printPixel(31, 36, 0xF800);
-	
+
 	printPixel(26, 32, 0xF800);
 	printPixel(27, 32, 0xF800);
 	printPixel(28, 32, 0xF800);
 	printPixel(29, 32, 0xF800);
 	printPixel(30, 32, 0xF800);
-	
+
 	printPixel(26, 36, 0xF800);
 	printPixel(27, 36, 0xF800);
 	printPixel(28, 36, 0xF800);
 	printPixel(29, 36, 0xF800);
 	printPixel(30, 36, 0xF800);
-	
-	
+
+
 	// 'K'
-	printPixel(25, 42, 0x07C0);	
-	printPixel(26, 42, 0x07C0);
-	printPixel(27, 42, 0x07C0);
-	printPixel(28, 42, 0x07C0);
-	printPixel(29, 42, 0x07C0);
-	printPixel(30, 42, 0x07C0);
-	printPixel(31, 42, 0x07C0);
-	
+	printPixel(25, 42, 0x07E0);
+	printPixel(26, 42, 0x07E0);
+	printPixel(27, 42, 0x07E0);
+	printPixel(28, 42, 0x07E0);
+	printPixel(29, 42, 0x07E0);
+	printPixel(30, 42, 0x07E0);
+	printPixel(31, 42, 0x07E0);
+
 	printPixel(29, 43, 0x07C0);
 	printPixel(28, 44, 0x07C0);
 	printPixel(27, 45, 0x07C0);
 	printPixel(26, 46, 0x07C0);
 	printPixel(25, 47, 0x07C0);
-	
+
 	printPixel(29, 45, 0x07C0);
 	printPixel(30, 46, 0x07C0);
 	printPixel(31, 47, 0x07C0);
-	
-	
+
+
 	// '!'
-	printPixel(25, 53, 0x001F);	
+	printPixel(25, 53, 0x001F);
 	printPixel(26, 53, 0x001F);
 	printPixel(27, 53, 0x001F);
 	printPixel(28, 53, 0x001F);
@@ -129,7 +129,7 @@ int bufferLength(const char* buffer)
 
 void rgb_oled_terminal(void)
 {
-	char buffer[16] =  "  RGB OLED!";                  
+	char buffer[16] =  "  RGB OLED!";
 	int i;
 
 	MemoryWrite(OLED_MUX, OLED_MUX_TERMINAL);
@@ -147,8 +147,8 @@ void rgb_oled_terminal(void)
 
 int main(int argc, char ** argv)
 {
-	rgb_oled_charmap();
-//	rgb_oled_bitmap();
+	 //rgb_oled_charmap();
+	rgb_oled_bitmap();
 //	rgb_oled_terminal();
 
 	while(1) ;

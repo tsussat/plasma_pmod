@@ -6,7 +6,7 @@
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
-void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes 
+void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes
 {	// la fréquence d'horloge vaut 50 MHz
 	unsigned int t0 = MemoryRead( TIMER_ADR  );
 	while ( MemoryRead( TIMER_ADR  ) - t0 < 50000*ms ) // On compte 50000 périodes pour 1 ms
