@@ -20,10 +20,11 @@ void sleep( unsigned int ms ) // fonction qui impose un delay en millisecondes
 		;
 }
 
-void clearScreen(){
+void clearScreen(short tab[MAX_ROW+1][MAX_COL+1]){
 	for (char row=0; row <= MAX_ROW; row++){
 		for (char col=0; col <= MAX_COL; col++){
 			printPixel(row, col, 0x0000);
+			tab[(int) row][(int) col] = 0;
 		}
 	}
 }
