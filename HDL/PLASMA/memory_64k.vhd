@@ -41,7 +41,7 @@ ENTITY memory_64k IS
 END memory_64k;
 
 ARCHITECTURE Behavioral OF memory_64k IS
-    CONSTANT ADDRESS_WIDTH : NATURAL := 14;  -- 2**X = NOMBRE D'OCTETS DE LA MEMOIRE
+    CONSTANT ADDRESS_WIDTH : NATURAL := 15;  -- 2**X = NOMBRE D'OCTETS DE LA MEMOIRE
 					     -- 14 =>  16ko of memory
 					     -- 15 =>  32ko of memory
 					     -- 16 =>  64ko of memory

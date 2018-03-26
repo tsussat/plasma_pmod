@@ -45,7 +45,6 @@ unsigned char wait_data()
 {
 	while( !(MemoryRead(IRQ_STATUS) & IRQ_UART_READ_AVAILABLE) );
 	unsigned char cc = MemoryRead(UART_READ);
-	//putchar(cc);
 	return cc;
 }
 
@@ -56,9 +55,28 @@ unsigned char wait_data_quiet()
 	return cc;
 }
 
-
 void print_err(unsigned long num){
-	puts("  + ERR (X) : "); putchar( '0' + (unsigned int)num ); puts("\n");
+	puts("Boot loader Error, unexpected received data");
+	switch(num)
+	{
+		case 2:
+			puts("The 1st received key is different from the expected one, should be 0x30\n");
+			break;
+		case 3:
+			puts("The 2nd received key is different from the expected one, should be 0x31\n");
+			break;
+		case 4:
+			puts("The 3rd received key is different from the expected one, should be 0x32\n");
+			break;
+		case 5:
+			puts("The 4th received key is different from the expected one, should be 0x33\n");
+			break;
+
+		default:
+			print_err( 2 );
+		break;
+        }
+	 putchar( '0' + (unsigned int)num ); puts("\n");
 }
 
 void flush_input_data()
@@ -67,213 +85,100 @@ void flush_input_data()
 	{
 	    getch();
 	}
-	while( !i_empty() )
-	{
-	    i_read();
-	}
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 void ProgramExec()
 {
     FuncPtr funcPtr;
     puts("> BOOTING..."); puts("\n");
-	funcPtr = (FuncPtr)0x10000000;
+	funcPtr = (FuncPtr)0x10000000; // jump to main()
 	funcPtr();
 	puts("> COMING BACK...\n");
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-// LE PROTOCOLE DE RECEPTION DU PROGRAMME EXECUTABLE EST LE SUIVANT
-// [1 x INT] VALEUR DE SYNCRHO (0xFF00EE11)
-// [1 x INT] TAILLE DU PROGRAMME (NOMBRE DE INT)
-// [1 x INT] VALEUR DE SYNCRHO (0xFF00EE11)
-// [n x INT] LES DONNEES DU PROGRAMME
-//
-
-int ReceiveProgramFromPCIe()
-{
-	unsigned int *ptr = (unsigned int*)DDR_BASE;
-	unsigned int data;
-	unsigned int sSize;
-	unsigned int pSum = 0;;
-    
-	while(i_empty() == 1);
-	data = (unsigned int)i_read();
-    
-	if( data != 0xFF00EE11 )
-	{
-        print_err( 1 );
-        return 0;
-	}
-    
-	while(i_empty() == 1);
-	sSize = (unsigned int)i_read(); // ON LIT LA DONNEE 0xFF
-    
-	while(i_empty() == 1);
-	data = (unsigned int)i_read(); // ON LIT LA DONNEE 0xFF
-	if( data != 0xFF00EE11 )
-	{
-        print_err( 2 );
-        return 0;
-	}
-    
-	int y = 0;
-	while(sSize--)
-	{
-		while(i_empty() == 1);
-		unsigned int value = (unsigned int)i_read();
-        pSum    += value;
-        ptr[y++] = value;
-	}  
-//   	puts("  + #  OCTETS : "); print_hex( (unsigned int)y ); puts(" CRC: ");  print_hex( pSum ); puts("\n");
-	return 1;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 int ReceiveProgram()
 {
-    //
-    // ON RECUPERE LA FIN DE L'EN TETE DU MESSAGE
-    //
-    unsigned char *ptr = (unsigned char*)DDR_BASE;
-    int y;
-    
+
+	unsigned char *ptr = (unsigned char*)DDR_BASE;
 	unsigned char data;
-	data = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("ch=",(int)(data));
-	if( data != 0x31 )
+
+	data = wait_data(); // read the 2nd key, should be : 0x31
+	if( data != 0x31 ) // check the key value
 	{
-        print_err( 3 );
-        return 0;
+        	print_err( 3 );
+        	return 0;
 	}
-	data = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("ch=",(int)(data));
+	data = wait_data(); // read the 3th key, should be : 0x32
 	if( data != 0x32 ) 
 	{
-        print_err( 4 );
-        return 0;
+        	print_err( 4 );
+        	return 0;
 	}
     
-	data = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("ch=",(int)(data));
+	data = wait_data(); // read the 4th key, should be : 0x33
 	if( data != 0x33 ) 
 	{
-        print_err( 5 );
-        return 0;
+        	print_err( 5 );
+        	return 0;
 	}
     
-    //
-    // ON CALCULE LA TAILLE DU PROGRAMME EXECUTABLE QUE L'ON VA RECEVOIR
-    //
-	unsigned char data1 = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("d1=",(int)(data1));
-	unsigned char data2 = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("d2=",(int)(data2));
-	unsigned char data3 = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("d3=",(int)(data3));
-	unsigned char data4 = wait_data(); // ON LIT LA DONNEE 0xFF
-	//my_printf("d4=",(int)(data4));
+	//
+	// RETRIEVE PROGRAM SIZE
+	// 
+
+	unsigned char data1 = wait_data(); // READ 4 BYTES THAT SHOULD REPRESENT THE PROGRAM SIZE
+	unsigned char data2 = wait_data();
+	unsigned char data3 = wait_data();
+	unsigned char data4 = wait_data();
+
 	unsigned int sSize = (data4 << 24) | (data3 << 16) | (data2 << 8) | data1;
-//	my_printf("size=%d\n",sSize);
-    //
-    // ON RECUPERE LES N DONNEES PREVUES
-    //
-    for(y=0; y<sSize; y++){
+
+	// READ THE PROGRAM OF SIZE sSize from address DDR_BASE (0x10000000)
+	for(int y=0; y<sSize; y++){
 		unsigned char dataS = wait_data();
-		//my_printf("dataS=",(int)(dataS));
 		ptr[y] = dataS;
-//		my_printf("y=",y);
-    }
-    ptr = (unsigned char*)DDR_BASE;
-    /*my_printf("val0 ",ptr[0]);
-    my_printf("val1 ",ptr[1]);
-    my_printf("val2 ",ptr[2]);
-    my_printf("val3 ",ptr[3]);
-    my_printf("valm4 ",ptr[sSize-4]);
-    my_printf("valm3 ",ptr[sSize-3]);
-    my_printf("valm2 ",ptr[sSize-2]);
-    my_printf("valm1 ",ptr[sSize-1]);*/
-    return 1;
+	}
+	// Go back to DDR_BASE adress
+	ptr = (unsigned char*)DDR_BASE;
+	return 1;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 int main()
 {
 	int ch;
 	puts("\n\n\n");
-	puts("uBoot-Loader (UART/PCIe)  v1.1");
+	puts("uBoot-Loader (UART) ");
 	puts(__DATE__); puts(" "); puts(__TIME__); puts("\n");
-	puts("(C) B. LE GAL 2012 - 2013\n");
-
-
-//    unsigned int *ptr = (unsigned int*)DDR_BASE;
-    
-	//
-	// ON TESTE LA MEMOIRE RAM INTERNE (64ko)
-	//
 	
 	flush_input_data();
-	puts("(I) Waiting program from PCIe or UART\n");
+	puts("(I) Waiting program from UART\n");
 	
    	for(;;)
    	{
         while( (kbhit() == 0) && (i_empty() == 1) ) ;
         
-        // MODE PCIe ?
-        if( i_empty() == 0 ){
-			puts("(I) Starting PCIe reception\n");
-            ReceiveProgramFromPCIe();
-            ProgramExec();
-            continue;
-        }
-        
-        // MODE UART ...
-        ch = wait_data();
-        //ch = getch();
-        //my_printf("ch=",(int)(ch));
-        switch(ch)
-        {
-            case 'A':
-				puts("(I) Starting PCIe reception\n");
-                ReceiveProgramFromPCIe();
-                ProgramExec();
-                break;
-                
-            case 0x30:
-		//puts("R"); //(I) Starting UART reception\n");
-                ReceiveProgram();
-                ProgramExec();
-                break;
-                
-            default:
-		        print_err( 9 );
-                break;	
+ 	ch = wait_data();
+	switch(ch)
+	{
+		case 0x30:
+			ReceiveProgram();
+			ProgramExec();
+			break;
+		default:
+			print_err( 2 );
+		break;
         }
     }
     return 0;
