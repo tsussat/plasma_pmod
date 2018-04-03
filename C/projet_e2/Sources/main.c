@@ -9,8 +9,7 @@ short tab[64][96] = {0, 1};
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
 
-int main(int argc, char ** argv)
-{
+int main(int argc, char ** argv){
 
   int sw, value, color;
   char col = 0;
@@ -18,6 +17,8 @@ int main(int argc, char ** argv)
   int val_button;
   int button_change;
   int write = 0; //ecriture sur l'ecran
+  int rect = 0; //rectangle actif
+  char start[2] = {0, 0}; //coordonées origine rectangle
 
 
   MemoryWrite(OLED_MUX, OLED_MUX_BITMAP);
@@ -36,6 +37,7 @@ int main(int argc, char ** argv)
   clearScreen(tab); //met l'ecran en noir
 
   while (1) {
+
     //BOUTONS
     val_button = MemoryRead(BUTTONS_VALUES);
     button_change = MemoryRead(BUTTONS_CHANGE);
@@ -68,46 +70,53 @@ int main(int argc, char ** argv)
       }
     }
 
-
     //LED
     sw = MemoryRead(CTRL_SL_RW); // read the state of the switches
     value =  (sw<<16) & 0x00070000 ; // MSByte drives the 2 RBG Led (6 bit), LSByte drives the led
     value = value | (write<<20);
     MemoryWrite(CTRL_SL_RW, value); // drive the LEDs with value
 
-    //ECRAN
-    color=0x0000;
-    if (sw & 0x00000001) {
-      color+=0x001F;
-    }
-    if (sw & 0x00000002) {
-      color+=0x07E0;
-    }
-    if (sw & 0x00000004) {
-      color+=0xF800;
-    }
-
-    if (write == 1){
-      printPixel(row,col,color);
-      tab[(int) row][(int) col]=color;
-    }
-
-    sleep(50);
-    printPixel(row, col , ~tab[(int) row][(int) col]);
-    sleep(50);
-    printPixel(row, col , tab[(int) row][(int) col]);
-
-    /*if(tab[0][0] == 0){
-      printPixel(63, 95, 0xFFFF);
-    }
-    else{
-      printPixel(63, 95, 0x0000);
-    }*/
     //RESET
     if(sw & 0x00008000){
       clearScreen(tab);
+      while(sw & 0x00008000);
     }
-    //sleep(100); // wait 100 ms
+    //RECTANGLE
+        //INIT
+        else if((sw & 0x00002000) && (rect==0)){
+            rect=1;
+            start[0] = row;
+            start[1] = col;
+        }
+        //PREVIEW
+        else if((sw & 0x00002000) && (rect==1)){
+            sleep(50);
+            printRect(start[0], start[1], row, col, ~tab[(int) row][(int) col], 0, tab);
+            sleep(50);
+            printRect(start[0], start[1], row, col, tab[(int) row][(int) col], 0, tab);
+        }
+        //TRACE
+        else if(!(sw & 0x00002000) && (rect==1)){
+            rect=0;
+            color=get_color(sw);
+            printRect(start[0], start[1], row, col, color, 1, tab);
+        }
+    //FONCTIONNEMENT NORMAL
+    else{
+      //COULEUR
+      color=get_color(sw);
+      //ECRITURE
+      if (write == 1){
+        printPixel(row,col,color);
+        tab[(int) row][(int) col]=color;
+      }
+      //CLIGNOTEMENT
+      sleep(50);
+      printPixel(row, col , ~tab[(int) row][(int) col]);
+      sleep(50);
+      printPixel(row, col , tab[(int) row][(int) col]);
+    }
+
   }
 
 }
