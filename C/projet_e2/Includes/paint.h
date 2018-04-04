@@ -56,7 +56,7 @@ void printRect(char row1, char col1, char row2, char col2, int color, int write,
             }
         }
     }
-    //1.2
+        //1.2
     else{
         for(int i=0; i<(col1-col2);i++){
             printPixel(row1,col2+i,color);
@@ -75,7 +75,7 @@ void printRect(char row1, char col1, char row2, char col2, int color, int write,
             }
         }
     }
-    //2.2
+        //2.2
     else{
         for(int i=0; i<(row1-row2)-1;i++){
             printPixel(row2+i,col1,color);
@@ -94,7 +94,7 @@ void printRect(char row1, char col1, char row2, char col2, int color, int write,
             }
         }
     }
-    //3.2 et 3.4
+        //3.2 et 3.4
     else{
         for(int i=0; i<(row1-row2)-1;i++){
             printPixel(row2 + i,col2,color);
@@ -112,12 +112,55 @@ void printRect(char row1, char col1, char row2, char col2, int color, int write,
             }
         }
     }
-    //4.3 et 4.4
+        //4.3 et 4.4
     else{
         for(int i=0; i<(col1-col2)-2;i++) {
             printPixel(row2, col2 + 1 + i, color);
             if (write) {
                 tab[(int) row2][(int) col2 + 1 + i] = color;
+            }
+        }
+    }
+}
+
+void printRectP(char row1, char col1, char row2, char col2, int color, short tab[MAX_ROW+1][MAX_COL+1]){
+    //1
+    if(col1<=col2){
+        if(row1<=row2){
+           for(int i =0; i<(row2-row1); i++){
+               for(int j =0; j<(col2-col1); j++){
+                   printPixel(row1 + i,col1 + j,color);
+                   tab[(int) row1 + i][(int) col1 + j]=color;
+               }
+           }
+        }
+        //2
+        else{
+            for(int i =0; i<(row1-row2); i++){
+                for(int j =0; j<(col2-col1); j++){
+                    printPixel(row2 + i,col1 + j,color);
+                    tab[(int) row2 + i][(int) col1 + j]=color;
+                }
+            }
+        }
+    }
+    //3
+    else{
+        if(row1<=row2){
+            for(int i =0; i<(row2-row1); i++){
+                for(int j =0; j<(col1-col2); j++){
+                    printPixel(row1 + i,col2 + j,color);
+                    tab[(int) row1 + i][(int) col2 + j]=color;
+                }
+            }
+        }
+        //4
+        else{
+            for(int i =0; i<(row1-row2); i++){
+                for(int j =0; j<(col1-col2); j++){
+                    printPixel(row2 + i,col2 + j,color);
+                    tab[(int) row2 + i][(int) col2 + j]=color;
+                }
             }
         }
     }

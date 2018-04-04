@@ -99,7 +99,12 @@ int main(int argc, char ** argv){
         else if(!(sw & 0x00002000) && (rect==1)){
             rect=0;
             color=get_color(sw);
-            printRect(start[0], start[1], row, col, color, 1, tab);
+            if(sw & 0x00001000){
+                printRectP(start[0], start[1], row, col, color, tab);
+            }
+            else {
+                printRect(start[0], start[1], row, col, color, 1, tab);
+            }
         }
     //FONCTIONNEMENT NORMAL
     else{
