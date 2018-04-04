@@ -19,19 +19,9 @@ int main(int argc, char ** argv)
   int button_change;
   int write = 0; //ecriture sur l'ecran
 
-
   MemoryWrite(OLED_MUX, OLED_MUX_BITMAP);
   MemoryWrite(OLED_BITMAP_RST, 1); // Reset the oled_rgb PMOD
   MemoryWrite(CTRL_SL_RST, 1); // reset the sw/led controler
-
-  /*
-  //Test
-  printPixel(0, 0, 0x001F);
-  printPixel(1, 0, 0x07E0);
-  printPixel(2, 0, 0xF800);
-  int a = readPixel(0, 0);
-  int b = readPixel(1, 0);
-*/
 
   clearScreen(tab); //met l'ecran en noir
 
@@ -68,7 +58,6 @@ int main(int argc, char ** argv)
       }
     }
 
-
     //LED
     sw = MemoryRead(CTRL_SL_RW); // read the state of the switches
     value =  (sw<<16) & 0x00070000 ; // MSByte drives the 2 RBG Led (6 bit), LSByte drives the led
@@ -97,17 +86,9 @@ int main(int argc, char ** argv)
     sleep(50);
     printPixel(row, col , tab[(int) row][(int) col]);
 
-    /*if(tab[0][0] == 0){
-      printPixel(63, 95, 0xFFFF);
-    }
-    else{
-      printPixel(63, 95, 0x0000);
-    }*/
     //RESET
     if(sw & 0x00008000){
       clearScreen(tab);
     }
-    //sleep(100); // wait 100 ms
   }
-
 }
