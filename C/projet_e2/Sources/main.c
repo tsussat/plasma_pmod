@@ -17,7 +17,7 @@ int main(int argc, char ** argv){
   int val_button;
   int button_change;
   int write = 0; //ecriture sur l'ecran
-  int rect = 0; //rectangle actif
+  int rect = 0; //rectangle inactif
   char start[2] = {0, 0}; //coordonées origine rectangle
 
   MemoryWrite(OLED_MUX, OLED_MUX_BITMAP);
@@ -69,39 +69,43 @@ int main(int argc, char ** argv){
     //RESET
     if(sw & 0x00008000){
       clearScreen(tab);
-      while(sw & 0x00008000);
+      //while(sw & 0x00008000);
     }
     //RECTANGLE
+    else if((sw & 0x00002000)){
         //INIT
-        else if((sw & 0x00002000) && (rect==0)){
-            rect=1;
-            start[0] = row;
-            start[1] = col;
+        if(rect==0){
+          rect=1;
+          start[0] = row;
+          start[1] = col;
         }
         //PREVIEW
-        else if((sw & 0x00002000) && (rect==1)){
-            sleep(50);
-            printRect(start[0], start[1], row, col, ~tab[(int) row][(int) col], 0, tab);
-            sleep(50);
-            printRect(start[0], start[1], row, col, tab[(int) row][(int) col], 0, tab);
+        else{
+          sleep(50);
+          printRect(start[0], start[1], row, col, ~tab[(int) row][(int) col], 0, tab);
+          sleep(50);
+          printRect(start[0], start[1], row, col, tab[(int) row][(int) col], 0, tab);
         }
-        //TRACE
-        else if(!(sw & 0x00002000) && (rect==1)){
-            rect=0;make project CONFIG_PROJECT=buttons
-            color=get_color(sw);
-            if(sw & 0x00001000){
-                printRectP(start[0], start[1], row, col, color, tab);
-            }
-            else {
-                printRect(start[0], start[1], row, col, color, 1, tab);
-            }
+    }
+    //TRACE
+    else if(!(sw & 0x00002000) && (rect==1)){
+        rect=0;
+        color=get_color(sw);
+        if(sw & 0x00001000){
+            printRectP(start[0], start[1], row, col, color, tab);
         }
+        else {
+            printRect(start[0], start[1], row, col, color, 1, tab);
+        }
+    }
+
+
     //FONCTIONNEMENT NORMAL
     else{
       //COULEUR
       color=get_color(sw);
       //ECRITURE
-      if (write == 1){
+      if ((write == 1) && (rect==0)){
         printPixel(row,col,color);
         tab[(int) row][(int) col]=color;
       }
