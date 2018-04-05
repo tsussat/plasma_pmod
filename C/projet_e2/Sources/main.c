@@ -4,7 +4,7 @@
 #include "../../shared/plasmaSoPCDesign.h"
 #include "../Includes/paint.h"
 
-short tab[64][96] = {0, 1};
+short tab[(MAX_COL+1)*(MAX_ROW+1)] = {0, 1};
 
 #define MemoryRead(A)     (*(volatile unsigned int*)(A))
 #define MemoryWrite(A,V) *(volatile unsigned int*)(A)=(V)
@@ -71,6 +71,7 @@ int main(int argc, char ** argv){
       clearScreen(tab);
       //while(sw & 0x00008000);
     }
+
     //RECTANGLE
     else if((sw & 0x00002000)){
         //INIT
@@ -82,11 +83,12 @@ int main(int argc, char ** argv){
         //PREVIEW
         else{
           sleep(50);
-          printRect(start[0], start[1], row, col, ~tab[(int) row][(int) col], 0, tab);
+          printRect(start[0], start[1], row, col, ~tab[(int) (MAX_COL+1)*row+col], 0, tab);
           sleep(50);
-          printRect(start[0], start[1], row, col, tab[(int) row][(int) col], 0, tab);
+          printRect(start[0], start[1], row, col, tab[(int) (MAX_COL+1)*row+col], 0, tab);
         }
     }
+
     //TRACE
     else if(!(sw & 0x00002000) && (rect==1)){
         rect=0;
@@ -98,8 +100,6 @@ int main(int argc, char ** argv){
             printRect(start[0], start[1], row, col, color, 1, tab);
         }
     }
-
-
     //FONCTIONNEMENT NORMAL
     else{
       //COULEUR
@@ -107,14 +107,14 @@ int main(int argc, char ** argv){
       //ECRITURE
       if ((write == 1) && (rect==0)){
         printPixel(row,col,color);
-        tab[(int) row][(int) col]=color;
+        tab[(int) (MAX_COL+1)*row+col] = color;
       }
       //CLIGNOTEMENT
       sleep(50);
-      printPixel(row, col , ~tab[(int) row][(int) col]);
+      printPixel(row, col , ~tab[(int) (MAX_COL+1)*row+col]);
       sleep(50);
-      printPixel(row, col , tab[(int) row][(int) col]);
+      printPixel(row, col , tab[(int) (MAX_COL+1)*row+col]);
     }
-
+    print_tab(tab);
   }
 }
